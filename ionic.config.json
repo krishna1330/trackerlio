@@ -1,0 +1,7 @@
+{
+  "name": "trackerlio",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular-standalone"
+}
