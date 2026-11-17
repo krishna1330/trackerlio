@@ -1,0 +1,563 @@
+<app-header></app-header>
+
+<ion-content [fullscreen]="true" class="expenses-screen-content">
+  <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <div class="expense-page-container">
+    <!-- Top Hero / Page Header Section -->
+    <div class="page-intro-header">
+      <div class="intro-titles">
+        <span class="intro-eyebrow">EVERY RUPEE ACCOUNTED FOR</span>
+        <h1 class="intro-title">Expenses</h1>
+        <p class="intro-subtitle">Choose a month or zoom out to see the whole year.</p>
+      </div>
+
+      <div class="intro-actions">
+        <button type="button" class="add-expense-btn" (click)="openAddExpenseModal()">
+          <ion-icon name="add-outline"></ion-icon>
+          <span>Add expense</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Filter Card: Showing expenses for + Year/Month Dropdowns -->
+    <div class="period-filter-card">
+      <div class="filter-left-section">
+        <div class="filter-calendar-box">
+          <ion-icon name="calendar-outline"></ion-icon>
+        </div>
+        <div class="filter-text-meta">
+          <span class="filter-meta-label">Showing expenses for</span>
+          <span class="filter-meta-value">{{ selectedMonthLabel() }} {{ selectedYear() }}</span>
+        </div>
+      </div>
+
+      <div class="filter-right-section">
+        <!-- Year Select Pill -->
+        <div class="filter-select-group">
+          <span class="select-micro-label">YEAR</span>
+          <div class="select-pill-wrapper">
+            <ion-select
+              interface="popover"
+              [ngModel]="selectedYear()"
+              (ngModelChange)="onYearChange($event)"
+              class="custom-period-select"
+            >
+              @for (year of years; track year) {
+                <ion-select-option [value]="year">{{ year }}</ion-select-option>
+              }
+            </ion-select>
+            <ion-icon name="chevron-down-outline" class="select-chevron"></ion-icon>
+          </div>
+        </div>
+
+        <!-- Month Select Pill -->
+        <div class="filter-select-group">
+          <span class="select-micro-label">MONTH</span>
+          <div class="select-pill-wrapper">
+            <ion-select
+              interface="popover"
+              [ngModel]="selectedMonth()"
+              (ngModelChange)="onMonthChange($event)"
+              class="custom-period-select"
+            >
+              @for (month of months; track month.value) {
+                <ion-select-option [value]="month.value">
+                  {{ month.label }}
+                </ion-select-option>
+              }
+            </ion-select>
+            <ion-icon name="chevron-down-outline" class="select-chevron"></ion-icon>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Total Spent Gradient Summary Card -->
+    <div class="total-spent-card">
+      <div class="total-left-col">
+        <span class="spent-subtitle">Total spent &bull; {{ selectedMonthLabel() }} {{ selectedYear() }}</span>
+        <h2 class="spent-amount-display">&#8377;{{ totalExpenses() | number:'1.2-2' }}</h2>
+      </div>
+
+      <div class="total-right-col">
+        <div class="metric-item">
+          <span class="metric-val">{{ expenseCount() }}</span>
+          <span class="metric-lbl">Transactions</span>
+        </div>
+        <div class="metric-item">
+          <span class="metric-val">&#8377;{{ averageExpense() | number:'1.0-0' }}</span>
+          <span class="metric-lbl">Average spend</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Category View (Spending by category) -->
+    <div class="category-breakdown-card">
+      <div class="category-card-header">
+        <div class="category-header-left">
+          <span class="category-micro-tag">CATEGORY VIEW</span>
+          <h3 class="category-card-title">Spending by category</h3>
+          <span class="category-card-sub">
+            {{ categoryCount() }} {{ categoryCount() === 1 ? 'category' : 'categories' }} &bull; {{ selectedMonthLabel() }} {{ selectedYear() }}
+          </span>
+        </div>
+
+        <div class="category-total-pill">
+          <span>&#8377;{{ totalExpenses() | number:'1.0-0' }}</span>
+        </div>
+      </div>
+
+      <!-- Categories Progress Bars List -->
+      <div class="category-rows-container">
+        @if (categoryBreakdown().length === 0) {
+          <div class="empty-category-note">
+            <span>No category data recorded for this month.</span>
+          </div>
+        } @else {
+          @for (cat of categoryBreakdown(); track cat.id) {
+            <div class="category-stat-wrapper" [class.is-expanded]="isCategoryExpanded(cat.id)">
+              <div
+                class="category-stat-row"
+                (click)="toggleCategoryExpand(cat.id)"
+                role="button"
+                tabindex="0"
+                [attr.aria-expanded]="isCategoryExpanded(cat.id)"
+              >
+                <div class="category-left-meta">
+                  <div class="category-rupee-icon">&#8377;</div>
+                  <div class="category-name-bar-col">
+                    <div class="cat-title-budget-row">
+                      <span class="category-item-name">{{ cat.name }}</span>
+                      @if (cat.budget) {
+                        <button
+                          type="button"
+                          class="cat-budget-pill"
+                          [class.exceeded]="cat.isBudgetExceeded"
+                          (click)="openBudgetModal(cat, $event)"
+                          title="Click to edit budget"
+                        >
+                          <span>Budget: &#8377;{{ cat.budgetAmount | number:'1.0-0' }}</span>
+                          <ion-icon name="create-outline"></ion-icon>
+                        </button>
+                      } @else {
+                        <button
+                          type="button"
+                          class="set-budget-link-btn"
+                          (click)="openBudgetModal(cat, $event)"
+                          title="Set budget for {{ cat.name }}"
+                        >
+                          <ion-icon name="add-outline"></ion-icon>
+                          <span>Set budget</span>
+                        </button>
+                      }
+                    </div>
+
+                    <div class="progress-track" [title]="cat.budget ? cat.budgetPercentage + '% of budget used' : cat.percentage + '% of total spending'">
+                      <div
+                        class="progress-fill"
+                        [class.budget-mode]="!!cat.budget"
+                        [class.warning]="cat.budget && cat.budgetPercentage >= 80 && !cat.isBudgetExceeded"
+                        [class.danger]="cat.budget && cat.isBudgetExceeded"
+                        [style.width.%]="cat.budget ? (cat.budgetPercentage > 100 ? 100 : cat.budgetPercentage) : cat.percentage"
+                      ></div>
+                    </div>
+
+                    <div class="cat-micro-budget-status">
+                      @if (cat.budget) {
+                        <span class="budget-stat-label">
+                          Spent &#8377;{{ cat.total | number:'1.0-0' }} of &#8377;{{ cat.budgetAmount | number:'1.0-0' }}
+                        </span>
+                        <span class="status-dot">&bull;</span>
+                        @if (cat.isBudgetExceeded) {
+                          <span class="budget-alert-label danger">
+                            Over budget by &#8377;{{ (cat.total - cat.budgetAmount) | number:'1.0-0' }} ({{ cat.budgetPercentage }}%)
+                          </span>
+                        } @else {
+                          <span class="budget-alert-label safe">
+                            &#8377;{{ cat.budgetRemaining | number:'1.0-0' }} left ({{ cat.budgetPercentage }}% used)
+                          </span>
+                        }
+                      } @else {
+                        <span class="budget-stat-label">{{ cat.percentage }}% of total spent this month</span>
+                      }
+                    </div>
+                  </div>
+                </div>
+
+                <div class="category-right-meta">
+                  <span class="cat-count-sub">{{ cat.count }} {{ cat.count === 1 ? 'expense' : 'expenses' }}</span>
+                  <span class="cat-amount-val">&#8377;{{ cat.total | number:'1.0-0' }}</span>
+                  @if (cat.budget) {
+                    <span class="cat-pct-sub" [class.danger-text]="cat.isBudgetExceeded">{{ cat.budgetPercentage }}%</span>
+                  } @else {
+                    <span class="cat-pct-sub">{{ cat.percentage }}%</span>
+                  }
+                  <button
+                    type="button"
+                    class="quick-budget-btn"
+                    (click)="openBudgetModal(cat, $event)"
+                    title="Set or edit category budget"
+                  >
+                    <ion-icon name="pie-chart-outline"></ion-icon>
+                  </button>
+                  <ion-icon
+                    name="chevron-down-outline"
+                    class="cat-expand-chevron"
+                    [class.rotated]="isCategoryExpanded(cat.id)"
+                  ></ion-icon>
+                </div>
+              </div>
+
+              <!-- Expanded Sub-list of Expenses for this Category -->
+              @if (isCategoryExpanded(cat.id)) {
+                <div class="category-expanded-expenses">
+                  <div class="expanded-header-bar">
+                    <span>Expenses under {{ cat.name }} ({{ cat.expenses.length }})</span>
+                  </div>
+
+                  <div class="expanded-items-list">
+                    @for (exp of cat.expenses; track exp.id) {
+                      <div class="cat-expense-subitem">
+                        <div class="subitem-left">
+                          <span class="subitem-name">{{ exp.expense_name }}</span>
+                          <div class="subitem-meta">
+                            <span class="subitem-date">{{ exp.expense_date | date:'EEE, MMM d' }}</span>
+                            @if (getAccountName(exp); as accName) {
+                              <span class="subitem-sep">&bull;</span>
+                              <span class="subitem-acc">{{ accName }}</span>
+                            }
+                            @if (exp.comments) {
+                              <span class="subitem-sep">&bull;</span>
+                              <span class="subitem-comment">{{ exp.comments }}</span>
+                            }
+                          </div>
+                        </div>
+
+                        <div class="subitem-right">
+                          <span class="subitem-amount">&#8377;{{ exp.amount | number:'1.2-2' }}</span>
+                          <div class="subitem-actions">
+                            <button
+                              type="button"
+                              class="subitem-btn edit-btn"
+                              (click)="openEditExpenseModal(exp, $event)"
+                              title="Edit expense"
+                            >
+                              <ion-icon name="create-outline"></ion-icon>
+                            </button>
+                            <button
+                              type="button"
+                              class="subitem-btn delete-btn"
+                              (click)="onDeleteExpense(exp, $event)"
+                              title="Delete expense"
+                            >
+                              <ion-icon name="trash-outline"></ion-icon>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        }
+      </div>
+    </div>
+
+    <!-- Search & Live Status Bar -->
+    <div class="search-and-status-row">
+      <div class="search-pill-box">
+        <ion-icon name="search-outline" class="search-icon"></ion-icon>
+        <input
+          type="text"
+          placeholder="Search this period"
+          [ngModel]="searchQuery()"
+          (ngModelChange)="searchQuery.set($event)"
+          class="custom-search-input"
+        />
+        @if (searchQuery()) {
+          <button type="button" class="clear-search-btn" (click)="searchQuery.set('')">
+            <ion-icon name="close-outline"></ion-icon>
+          </button>
+        }
+      </div>
+
+      <div class="live-status-indicator">
+        <span class="live-dot"></span>
+        <span class="live-text">Live &bull; updated just now</span>
+      </div>
+    </div>
+
+    <!-- Error State -->
+    @if (errorMessage()) {
+      <div class="error-banner-box">
+        <ion-icon name="alert-circle-outline"></ion-icon>
+        <span>{{ errorMessage() }}</span>
+      </div>
+    }
+
+    <!-- Loading State -->
+    @if (loading()) {
+      <div class="state-container">
+        <ion-spinner name="crescent" color="primary"></ion-spinner>
+        <p>Loading expenses for {{ selectedMonthLabel() }} {{ selectedYear() }}...</p>
+      </div>
+    }
+
+    <!-- Transaction List Section -->
+    @if (!loading() && !errorMessage()) {
+      <div class="transactions-section">
+        <!-- Section Sub-Header -->
+        <div class="transactions-header-row">
+          <div class="tx-header-left">
+            <span class="tx-month-title">{{ selectedMonthLabel() }} {{ selectedYear() }}</span>
+            <span class="tx-count-label">{{ expenseCount() }} {{ expenseCount() === 1 ? 'expense' : 'expenses' }}</span>
+          </div>
+          <div class="tx-header-right">
+            <span class="tx-total-amount">&#8377;{{ totalExpenses() | number:'1.2-2' }}</span>
+          </div>
+        </div>
+
+        @if (filteredExpenses().length === 0) {
+          <div class="state-container empty-state-box">
+            <ion-icon name="receipt-outline" class="empty-icon"></ion-icon>
+            <h4>No expenses found</h4>
+            <p>
+              @if (searchQuery()) {
+                No expenses match "{{ searchQuery() }}" in {{ selectedMonthLabel() }} {{ selectedYear() }}.
+              } @else {
+                There are no expenses recorded for {{ selectedMonthLabel() }} {{ selectedYear() }}.
+              }
+            </p>
+            <button type="button" class="empty-add-btn" (click)="openAddExpenseModal()">
+              <ion-icon name="add-outline"></ion-icon>
+              <span>Add your first expense</span>
+            </button>
+          </div>
+        } @else {
+          <!-- Transactions Cards List -->
+          <div class="transactions-cards-list">
+            @for (exp of filteredExpenses(); track exp.id) {
+              <div class="transaction-card-row">
+                <!-- Left: Rupee Avatar + Details -->
+                <div class="tx-main-left">
+                  <div class="tx-rupee-avatar">&#8377;</div>
+                  <div class="tx-details-column">
+                    <span class="tx-item-title">{{ exp.expense_name }}</span>
+                    <div class="tx-item-subline">
+                      <span class="tx-cat-name">{{ getCategoryName(exp) }}</span>
+                      <span class="tx-dot-sep">&bull;</span>
+                      <span class="tx-date-str">{{ exp.expense_date | date:'EEE, MMM d' }}</span>
+                      @if (getAccountName(exp); as accName) {
+                        <span class="tx-dot-sep">&bull;</span>
+                        <span class="tx-acc-name">{{ accName }}</span>
+                      }
+                    </div>
+                    @if (exp.comments) {
+                      <span class="tx-comment-line">{{ exp.comments }}</span>
+                    }
+                  </div>
+                </div>
+
+                <!-- Right: Amount + Actions -->
+                <div class="tx-main-right">
+                  <span class="tx-amount-value">&#8377;{{ exp.amount | number:'1.2-2' }}</span>
+                  <div class="tx-actions-row">
+                    <button
+                      type="button"
+                      class="tx-edit-action"
+                      (click)="openEditExpenseModal(exp, $event)"
+                      title="Edit expense"
+                    >
+                      <ion-icon name="create-outline"></ion-icon>
+                    </button>
+                    <button
+                      type="button"
+                      class="tx-delete-action"
+                      (click)="onDeleteExpense(exp, $event)"
+                      title="Delete expense"
+                    >
+                      <ion-icon name="trash-outline"></ion-icon>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Add Expense Modal -->
+  <ion-modal [isOpen]="isAddModalOpen()" (didDismiss)="closeAddExpenseModal()" class="add-expense-modal">
+    <ng-template>
+      <div class="modal-wrapper-card">
+        <div class="modal-header-bar">
+          <div class="modal-title-box">
+            <span class="modal-eyebrow">{{ isEditing() ? 'UPDATE RECORD' : 'NEW RECORD' }}</span>
+            <h3>{{ isEditing() ? 'Edit Expense' : 'Add Expense' }}</h3>
+          </div>
+          <button type="button" class="modal-close-btn" (click)="closeAddExpenseModal()">
+            <ion-icon name="close-outline"></ion-icon>
+          </button>
+        </div>
+
+        <div class="modal-body-content">
+          <!-- Expense Name -->
+          <div class="form-field-group">
+            <label class="field-label">Expense Name *</label>
+            <input
+              type="text"
+              [(ngModel)]="newExpenseName"
+              placeholder="e.g. Grocery, Petrol, Dinner"
+              class="modal-text-input"
+            />
+          </div>
+
+          <!-- Amount -->
+          <div class="form-field-group">
+            <label class="field-label">Amount (&#8377;) *</label>
+            <input
+              type="number"
+              step="0.01"
+              min="0.01"
+              [(ngModel)]="newExpenseAmount"
+              placeholder="0.00"
+              class="modal-text-input"
+            />
+          </div>
+
+          <!-- Date -->
+          <div class="form-field-group">
+            <label class="field-label">Date *</label>
+            <input
+              type="date"
+              [(ngModel)]="newExpenseDate"
+              class="modal-text-input date-input"
+            />
+          </div>
+
+          <!-- Category -->
+          <div class="form-field-group">
+            <label class="field-label">Category *</label>
+            <select [(ngModel)]="newExpenseCategoryId" class="modal-select-input">
+              <option value="" disabled>Select category</option>
+              @for (cat of categories(); track cat.id) {
+                <option [value]="cat.id">{{ cat.category_name }}</option>
+              }
+            </select>
+          </div>
+
+          <!-- Account -->
+          <div class="form-field-group">
+            <label class="field-label">Account *</label>
+            <select [(ngModel)]="newExpenseAccountId" class="modal-select-input">
+              <option value="" disabled>Select account</option>
+              @for (acc of accounts(); track acc.id) {
+                <option [value]="acc.id">{{ acc.account_name }}</option>
+              }
+            </select>
+          </div>
+
+          <!-- Comments -->
+          <div class="form-field-group">
+            <label class="field-label">Comments (Optional)</label>
+            <textarea
+              [(ngModel)]="newExpenseComments"
+              placeholder="Add optional notes..."
+              rows="2"
+              class="modal-text-input"
+            ></textarea>
+          </div>
+
+          <!-- Submit Button -->
+          <button
+            type="button"
+            class="modal-submit-btn"
+            [disabled]="isSubmitting()"
+            (click)="onSaveExpense()"
+          >
+            @if (isSubmitting()) {
+              <ion-spinner name="crescent"></ion-spinner>
+            } @else {
+              <span>{{ isEditing() ? 'Update Expense' : 'Save Expense' }}</span>
+            }
+          </button>
+        </div>
+      </div>
+    </ng-template>
+  </ion-modal>
+
+  <!-- Set / Edit Category Budget Modal (directly from Category View) -->
+  <ion-modal [isOpen]="isBudgetModalOpen()" (didDismiss)="closeBudgetModal()" class="category-budget-modal">
+    <ng-template>
+      <div class="modal-wrapper-card">
+        <div class="modal-header-bar">
+          <div class="modal-title-box">
+            <span class="modal-eyebrow">{{ budgetModalExistingId ? 'UPDATE BUDGET' : 'SET BUDGET' }} &bull; {{ selectedMonthLabel() }} {{ selectedYear() }}</span>
+            <h3>{{ budgetModalExistingId ? 'Edit Category Budget' : 'Set Category Budget' }}</h3>
+          </div>
+          <button type="button" class="modal-close-btn" (click)="closeBudgetModal()">
+            <ion-icon name="close-outline"></ion-icon>
+          </button>
+        </div>
+
+        <div class="modal-body-content">
+          <!-- Category Display -->
+          <div class="form-field-group">
+            <label class="field-label">Category</label>
+            <div class="modal-static-category">
+              <ion-icon name="pricetag-outline"></ion-icon>
+              <span>{{ budgetModalCategoryName }}</span>
+            </div>
+          </div>
+
+          <!-- Monthly Limit -->
+          <div class="form-field-group">
+            <label class="field-label">Monthly Budget Limit (&#8377;) *</label>
+            <input
+              type="number"
+              step="0.01"
+              min="1"
+              [(ngModel)]="budgetModalAmount"
+              placeholder="e.g. 5000"
+              class="modal-text-input"
+            />
+          </div>
+
+          <!-- Modal Action Buttons -->
+          <div class="modal-actions-dual">
+            <button
+              type="button"
+              class="modal-submit-btn"
+              [disabled]="isBudgetSubmitting()"
+              (click)="onSaveBudgetFromCategoryView()"
+            >
+              @if (isBudgetSubmitting()) {
+                <ion-spinner name="crescent"></ion-spinner>
+              } @else {
+                <span>{{ budgetModalExistingId ? 'Update Budget' : 'Save Budget' }}</span>
+              }
+            </button>
+
+            @if (budgetModalExistingId) {
+              <button
+                type="button"
+                class="modal-delete-budget-btn"
+                [disabled]="isBudgetSubmitting()"
+                (click)="onDeleteBudgetFromCategoryView()"
+              >
+                <span>Remove Budget</span>
+              </button>
+            }
+          </div>
+        </div>
+      </div>
+    </ng-template>
+  </ion-modal>
+</ion-content>

@@ -1,0 +1,265 @@
+<app-header pageTitle="Categories"></app-header>
+
+<ion-content [fullscreen]="true" class="categories-screen-content">
+  <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <div class="categories-page-container">
+    <!-- Top Hero Header -->
+    <div class="page-intro-header">
+      <div class="intro-titles">
+        <span class="intro-eyebrow">CLASSIFICATION</span>
+        <h1 class="intro-title">Categories</h1>
+        <p class="intro-subtitle">Group, track, and organize your expenses efficiently.</p>
+      </div>
+
+      <div class="intro-actions">
+        <button type="button" class="add-category-btn" (click)="openAddModal()">
+          <ion-icon name="add-outline"></ion-icon>
+          <span>Add category</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Summary Metrics Card -->
+    <div class="categories-summary-card">
+      <div class="summary-left-col">
+        <span class="summary-subtitle">TOTAL CONFIGURED CATEGORIES</span>
+        <h2 class="summary-count-display">{{ totalCount() }}</h2>
+      </div>
+
+      <div class="summary-right-col">
+        <div class="metric-item">
+          <span class="metric-val">{{ activeCount() }}</span>
+          <span class="metric-lbl">Active</span>
+        </div>
+        <div class="metric-divider"></div>
+        <div class="metric-item">
+          <span class="metric-val">{{ totalCount() - activeCount() }}</span>
+          <span class="metric-lbl">Inactive</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Search Input Bar -->
+    <div class="search-bar-row">
+      <div class="search-pill-box">
+        <ion-icon name="search-outline" class="search-icon"></ion-icon>
+        <input
+          type="text"
+          placeholder="Search categories by name..."
+          [ngModel]="searchQuery()"
+          (ngModelChange)="searchQuery.set($event)"
+          class="custom-search-input"
+        />
+        @if (searchQuery()) {
+          <button type="button" class="clear-search-btn" (click)="searchQuery.set('')">
+            <ion-icon name="close-outline"></ion-icon>
+          </button>
+        }
+      </div>
+
+      <div class="count-meta">
+        <span>{{ filteredCategories().length }} {{ filteredCategories().length === 1 ? 'category' : 'categories' }}</span>
+      </div>
+    </div>
+
+    <!-- Error Banner -->
+    @if (errorMessage()) {
+      <div class="error-banner-box">
+        <ion-icon name="alert-circle-outline"></ion-icon>
+        <span>{{ errorMessage() }}</span>
+      </div>
+    }
+
+    <!-- Loading State -->
+    @if (loading()) {
+      <div class="state-container">
+        <ion-spinner name="crescent" color="primary"></ion-spinner>
+        <p>Loading categories...</p>
+      </div>
+    }
+
+    <!-- Categories List -->
+    @if (!loading() && !errorMessage()) {
+      @if (filteredCategories().length === 0) {
+        <div class="state-container empty-state-box">
+          <ion-icon name="pricetags-outline" class="empty-icon"></ion-icon>
+          <h4>No Categories Found</h4>
+          <p>
+            @if (searchQuery()) {
+              No categories match "{{ searchQuery() }}".
+            } @else {
+              Add your first expense category to get started.
+            }
+          </p>
+          <button type="button" class="empty-add-btn" (click)="openAddModal()">
+            <ion-icon name="add-outline"></ion-icon>
+            <span>Create Category</span>
+          </button>
+        </div>
+      } @else {
+        <div class="categories-grid-list">
+          @for (cat of filteredCategories(); track cat.id) {
+            <div class="category-card-wrapper" [class.is-expanded]="isCategoryExpanded(cat.id)">
+              <div
+                class="category-card-item"
+                (click)="toggleCategoryExpand(cat)"
+                role="button"
+                tabindex="0"
+                [attr.aria-expanded]="isCategoryExpanded(cat.id)"
+              >
+                <!-- Left: Avatar Icon & Category Details -->
+                <div class="cat-main-left">
+                  <div class="cat-icon-avatar">
+                    <ion-icon name="pricetag-outline"></ion-icon>
+                  </div>
+
+                  <div class="cat-meta-column">
+                    <h3 class="cat-title">{{ cat.category_name }}</h3>
+                    <div class="cat-badges-row">
+                      <span class="status-pill" [class.inactive]="!cat.is_active">
+                        {{ cat.is_active ? 'Active' : 'Inactive' }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Right: Actions Group + Chevron -->
+                <div class="cat-main-right">
+                  <div class="cat-actions-group">
+                    <button
+                      type="button"
+                      class="action-btn edit-btn"
+                      (click)="openEditModal(cat, $event)"
+                      title="Edit category"
+                    >
+                      <ion-icon name="create-outline"></ion-icon>
+                    </button>
+
+                    <button
+                      type="button"
+                      class="action-btn delete-btn"
+                      (click)="onDeleteCategory(cat, $event)"
+                      title="Delete category"
+                    >
+                      <ion-icon name="trash-outline"></ion-icon>
+                    </button>
+                  </div>
+
+                  <ion-icon
+                    name="chevron-down-outline"
+                    class="cat-expand-chevron"
+                    [class.rotated]="isCategoryExpanded(cat.id)"
+                  ></ion-icon>
+                </div>
+              </div>
+
+              <!-- Expanded Expenses under this category -->
+              @if (isCategoryExpanded(cat.id)) {
+                <div class="category-expanded-expenses">
+                  @if (loadingExpenses()[cat.id]) {
+                    <div class="expenses-sub-loading">
+                      <ion-spinner name="crescent" color="primary"></ion-spinner>
+                      <span>Loading expenses...</span>
+                    </div>
+                  } @else {
+                    @if ((categoryExpenses()[cat.id] || []).length === 0) {
+                      <div class="empty-sub-expenses">
+                        <span>No expenses recorded under "{{ cat.category_name }}".</span>
+                      </div>
+                    } @else {
+                      <div class="expanded-header-bar">
+                        <span>All Expenses under {{ cat.category_name }} ({{ categoryExpenses()[cat.id].length }})</span>
+                        <span class="sub-total-pill">Total: &#8377;{{ getCategoryTotal(cat.id) | number:'1.2-2' }}</span>
+                      </div>
+
+                      <div class="expanded-items-list">
+                        @for (exp of categoryExpenses()[cat.id]; track exp.id) {
+                          <div class="cat-expense-subitem">
+                            <div class="subitem-left">
+                              <span class="subitem-name">{{ exp.expense_name }}</span>
+                              <div class="subitem-meta">
+                                <span class="subitem-date">{{ exp.expense_date | date:'EEE, MMM d, y' }}</span>
+                                @if (exp.accounts?.account_name || exp.account?.account_name; as accName) {
+                                  <span class="subitem-sep">&bull;</span>
+                                  <span class="subitem-acc">{{ accName }}</span>
+                                }
+                                @if (exp.comments) {
+                                  <span class="subitem-sep">&bull;</span>
+                                  <span class="subitem-comment">{{ exp.comments }}</span>
+                                }
+                              </div>
+                            </div>
+
+                            <div class="subitem-right">
+                              <span class="subitem-amount">&#8377;{{ exp.amount | number:'1.2-2' }}</span>
+                            </div>
+                          </div>
+                        }
+                      </div>
+                    }
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+    }
+  </div>
+
+  <!-- Add / Edit Category Modal -->
+  <ion-modal [isOpen]="isModalOpen()" (didDismiss)="closeModal()" class="category-modal">
+    <ng-template>
+      <div class="modal-wrapper-card">
+        <div class="modal-header-bar">
+          <div class="modal-title-box">
+            <span class="modal-eyebrow">{{ isEditing() ? 'UPDATE CATEGORY' : 'NEW CATEGORY' }}</span>
+            <h3>{{ isEditing() ? 'Edit Category' : 'Add Category' }}</h3>
+          </div>
+          <button type="button" class="modal-close-btn" (click)="closeModal()">
+            <ion-icon name="close-outline"></ion-icon>
+          </button>
+        </div>
+
+        <div class="modal-body-content">
+          <!-- Category Name -->
+          <div class="form-field-group">
+            <label class="field-label">Category Name *</label>
+            <input
+              type="text"
+              [(ngModel)]="categoryName"
+              placeholder="e.g. Groceries, Entertainment, Healthcare"
+              class="modal-text-input"
+            />
+          </div>
+
+          <!-- Status Checkbox -->
+          <div class="form-field-group checkbox-row">
+            <label class="checkbox-container">
+              <input type="checkbox" [(ngModel)]="isActive" />
+              <span class="checkmark-box"></span>
+              <span class="checkbox-text">Category is Active</span>
+            </label>
+          </div>
+
+          <!-- Submit Button -->
+          <button
+            type="button"
+            class="modal-submit-btn"
+            [disabled]="isSubmitting()"
+            (click)="onSaveCategory()"
+          >
+            @if (isSubmitting()) {
+              <ion-spinner name="crescent"></ion-spinner>
+            } @else {
+              <span>{{ isEditing() ? 'Update Category' : 'Save Category' }}</span>
+            }
+          </button>
+        </div>
+      </div>
+    </ng-template>
+  </ion-modal>
+</ion-content>

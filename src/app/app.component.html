@@ -1,3 +1,143 @@
 <ion-app>
-  <ion-router-outlet></ion-router-outlet>
+  <ion-split-pane contentId="main-content" [disabled]="!currentUser()" when="lg">
+    <!-- Left Navigation Bar (Visible ONLY to Logged-in Users) -->
+    @if (currentUser()) {
+      <ion-menu contentId="main-content" menuId="main-menu" class="app-side-menu">
+        <!-- Menu Header -->
+        <ion-header class="ion-no-border">
+          <ion-toolbar class="menu-brand-toolbar">
+            <div class="menu-brand-header">
+              <div class="menu-logo-badge">
+                <ion-icon name="wallet"></ion-icon>
+              </div>
+              <div class="menu-brand-titles">
+                <span class="brand-name">Trackerlio</span>
+                <span class="brand-tagline">Expense & Budget</span>
+              </div>
+            </div>
+          </ion-toolbar>
+        </ion-header>
+
+        <!-- Menu Navigation Items -->
+        <ion-content class="menu-scroll-content">
+          <div class="menu-section-label">MENU</div>
+
+          <ion-list lines="none" class="sidebar-nav-list">
+            <!-- Home / Dashboard -->
+            <ion-item
+              button
+              routerLink="/home"
+              routerDirection="root"
+              routerLinkActive="active-link"
+              (click)="closeMenuOnMobile()"
+              class="nav-menu-item"
+            >
+              <ion-icon slot="start" name="home-outline"></ion-icon>
+              <ion-label>Home</ion-label>
+            </ion-item>
+
+            <!-- Expense Tracker (Expandable Accordion) -->
+            <ion-accordion-group [value]="['expense-tracker']" class="expense-accordion-group">
+              <ion-accordion value="expense-tracker" class="expense-accordion">
+                <ion-item slot="header" class="accordion-trigger-item">
+                  <ion-icon slot="start" name="wallet-outline"></ion-icon>
+                  <ion-label>Expense Tracker</ion-label>
+                </ion-item>
+
+                <!-- Expanded Sub-items -->
+                <div slot="content" class="accordion-sub-menu">
+                  <!-- Expenses -->
+                  <ion-item
+                    button
+                    routerLink="/expenses"
+                    routerDirection="root"
+                    routerLinkActive="active-sub-link"
+                    (click)="closeMenuOnMobile()"
+                    class="sub-menu-item"
+                  >
+                    <ion-icon slot="start" name="receipt-outline"></ion-icon>
+                    <ion-label>Expenses</ion-label>
+                  </ion-item>
+
+                  <!-- Categories -->
+                  <ion-item
+                    button
+                    routerLink="/categories"
+                    routerDirection="root"
+                    routerLinkActive="active-sub-link"
+                    (click)="closeMenuOnMobile()"
+                    class="sub-menu-item"
+                  >
+                    <ion-icon slot="start" name="pricetags-outline"></ion-icon>
+                    <ion-label>Categories</ion-label>
+                  </ion-item>
+
+                  <!-- Accounts -->
+                  <ion-item
+                    button
+                    routerLink="/accounts"
+                    routerDirection="root"
+                    routerLinkActive="active-sub-link"
+                    (click)="closeMenuOnMobile()"
+                    class="sub-menu-item"
+                  >
+                    <ion-icon slot="start" name="card-outline"></ion-icon>
+                    <ion-label>Accounts</ion-label>
+                  </ion-item>
+
+                  <!-- Budgets -->
+                  <ion-item
+                    button
+                    routerLink="/budgets"
+                    routerDirection="root"
+                    routerLinkActive="active-sub-link"
+                    (click)="closeMenuOnMobile()"
+                    class="sub-menu-item"
+                  >
+                    <ion-icon slot="start" name="pie-chart-outline"></ion-icon>
+                    <ion-label>Budgets</ion-label>
+                  </ion-item>
+                </div>
+              </ion-accordion>
+            </ion-accordion-group>
+
+            <!-- Users List (Visible only to Admin) -->
+            @if (isAdmin()) {
+              <ion-item
+                button
+                routerLink="/users"
+                routerDirection="root"
+                routerLinkActive="active-link"
+                (click)="closeMenuOnMobile()"
+                class="nav-menu-item"
+              >
+                <ion-icon slot="start" name="people-outline"></ion-icon>
+                <ion-label>Users</ion-label>
+                <ion-badge slot="end" class="nav-admin-badge">Admin</ion-badge>
+              </ion-item>
+            }
+          </ion-list>
+        </ion-content>
+
+        <!-- Menu Footer with User Status & Logout -->
+        @if (currentUser(); as user) {
+          <ion-footer class="menu-bottom-footer ion-no-border">
+            <div class="footer-user-card">
+              <div class="user-avatar-small">{{ userInitials() }}</div>
+              <div class="user-info-text">
+                <span class="user-name-title">{{ displayName() }}</span>
+                <span class="user-email-subtitle">{{ user.email }}</span>
+              </div>
+              <ion-button fill="clear" color="danger" size="small" (click)="onSignOut()" title="Logout">
+                <ion-icon slot="icon-only" name="log-out-outline"></ion-icon>
+              </ion-button>
+            </div>
+          </ion-footer>
+        }
+      </ion-menu>
+    }
+
+    <!-- Main Content Area -->
+    <ion-router-outlet id="main-content"></ion-router-outlet>
+  </ion-split-pane>
 </ion-app>

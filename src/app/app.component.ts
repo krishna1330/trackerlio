@@ -1,11 +1,127 @@
-import { Component } from '@angular/core';
-import { IonApp, IonRouterOutlet } from '@ionic/angular';
+import { Component, inject, computed } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+import {
+  IonApp,
+  IonSplitPane,
+  IonMenu,
+  IonHeader,
+  IonToolbar,
+  IonContent,
+  IonList,
+  IonItem,
+  IonLabel,
+  IonIcon,
+  IonAccordionGroup,
+  IonAccordion,
+  IonRouterOutlet,
+  IonFooter,
+  IonButton,
+  IonBadge,
+  MenuController,
+} from '@ionic/angular';
+import { addIcons } from 'ionicons';
+import {
+  homeOutline,
+  wallet,
+  walletOutline,
+  receiptOutline,
+  pricetagsOutline,
+  peopleOutline,
+  logOutOutline,
+  chevronForwardOutline,
+  personCircleOutline,
+  cardOutline,
+  pieChartOutline,
+} from 'ionicons/icons';
+import { SupabaseService } from './services/supabase.service';
 
 @Component({
   selector: 'app-root',
   templateUrl: 'app.component.html',
-  imports: [IonApp, IonRouterOutlet],
+  styleUrls: ['app.component.scss'],
+  imports: [
+    CommonModule,
+    RouterLink,
+    RouterLinkActive,
+    IonApp,
+    IonSplitPane,
+    IonMenu,
+    IonHeader,
+    IonToolbar,
+    IonContent,
+    IonList,
+    IonItem,
+    IonLabel,
+    IonIcon,
+    IonAccordionGroup,
+    IonAccordion,
+    IonRouterOutlet,
+    IonFooter,
+    IonButton,
+    IonBadge,
+  ],
 })
 export class AppComponent {
-  constructor() {}
+  private readonly supabase = inject(SupabaseService);
+  private readonly router = inject(Router);
+  private readonly menuCtrl = inject(MenuController);
+
+  readonly currentUser = this.supabase.currentUser;
+  readonly isAdmin = this.supabase.isAdmin;
+
+  readonly displayName = computed(() => {
+    const user = this.currentUser();
+    if (!user) return 'Guest';
+
+    const meta = user.user_metadata;
+    if (meta?.['first_name'] || meta?.['last_name']) {
+      const full = `${meta['first_name'] || ''} ${meta['last_name'] || ''}`.trim();
+      if (full) return full;
+    }
+
+    if (user.email) {
+      const prefix = user.email.split('@')[0];
+      return prefix.charAt(0).toUpperCase() + prefix.slice(1);
+    }
+
+    return 'User';
+  });
+
+  readonly userInitials = computed(() => {
+    const name = this.displayName();
+    if (!name || name === 'Guest') return 'U';
+    const parts = name.split(' ');
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return name.slice(0, 2).toUpperCase();
+  });
+
+  constructor() {
+    addIcons({
+      homeOutline,
+      wallet,
+      walletOutline,
+      receiptOutline,
+      pricetagsOutline,
+      peopleOutline,
+      logOutOutline,
+      chevronForwardOutline,
+      personCircleOutline,
+      cardOutline,
+      pieChartOutline,
+    });
+  }
+
+  async closeMenuOnMobile() {
+    // Closes the drawer on mobile after clicking a link
+    await this.menuCtrl.close();
+  }
+
+  async onSignOut() {
+    await this.supabase.signOut();
+    await this.closeMenuOnMobile();
+    this.router.navigate(['/home']);
+  }
 }

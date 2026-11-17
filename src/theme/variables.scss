@@ -1,2 +1,60 @@
-// For information on how to create your own theme, please refer to:
-// https://ionicframework.com/docs/theming/
+/**
+ * Trackerlio Unified Midnight-Purple Palette
+ */
+:root {
+  // Primary (Electric Violet / Purple)
+  --ion-color-primary: #8b5cf6;
+  --ion-color-primary-rgb: 139, 92, 246;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+  --ion-color-primary-shade: #7c3aed;
+  --ion-color-primary-tint: #a78bfa;
+
+  // Secondary (Vibrant Indigo)
+  --ion-color-secondary: #6366f1;
+  --ion-color-secondary-rgb: 99, 102, 241;
+  --ion-color-secondary-contrast: #ffffff;
+  --ion-color-secondary-contrast-rgb: 255, 255, 255;
+  --ion-color-secondary-shade: #4f46e5;
+  --ion-color-secondary-tint: #818cf8;
+
+  // Deep Midnight Background
+  --ion-background-color: #0d0e15;
+  --ion-background-color-rgb: 13, 14, 21;
+  --ion-text-color: #ffffff;
+  --ion-text-color-rgb: 255, 255, 255;
+
+  // Surfaces & Toolbars
+  --ion-card-background: #151624;
+  --ion-item-background: #151624;
+  --ion-toolbar-background: #0f101a;
+
+  // Medium / Muted Text
+  --ion-color-medium: #9ca3af;
+  --ion-color-medium-rgb: 156, 163, 175;
+
+  // Step Grayscale Palette
+  --ion-color-step-50: #131422;
+  --ion-color-step-100: #1a1c2d;
+  --ion-color-step-150: #202235;
+  --ion-color-step-200: #26283c;
+  --ion-color-step-300: #373950;
+  --ion-color-step-400: #4a4d66;
+  --ion-color-step-500: #6b7280;
+  --ion-color-step-600: #9ca3af;
+  --ion-color-step-700: #d1d5db;
+  --ion-color-step-800: #e5e7eb;
+  --ion-color-step-900: #f3f4f6;
+  --ion-color-step-950: #ffffff;
+}
+
+// Ensure dark palette inherits the same custom colors
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ion-background-color: #0d0e15;
+    --ion-background-color-rgb: 13, 14, 21;
+    --ion-card-background: #151624;
+    --ion-item-background: #151624;
+    --ion-toolbar-background: #0f101a;
+  }
+}

@@ -1,0 +1,230 @@
+.custom-app-header {
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.2);
+}
+
+.header-toolbar {
+  --background: #0f101a;
+  background-color: #0f101a;
+  --color: #ffffff;
+  --border-width: 0 0 1px 0;
+  --border-color: rgba(255, 255, 255, 0.08);
+  padding: 0 6px;
+  min-height: 56px;
+}
+
+// Brand section
+.brand-buttons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.menu-toggle-btn {
+  --color: #ffffff;
+  color: #ffffff;
+  margin-right: 4px;
+}
+
+.brand-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 8px;
+  transition: background-color 0.15s ease;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+
+  .brand-logo-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    box-shadow: 0 3px 10px rgba(139, 92, 246, 0.4);
+  }
+
+  .brand-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    color: #ffffff;
+  }
+}
+
+.page-title-separator {
+  color: #6b7280;
+  font-size: 0.95rem;
+  margin: 0 4px;
+}
+
+.page-sub-title {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #9ca3af;
+  white-space: nowrap;
+}
+
+// User Profile Button & Popover Trigger
+.user-buttons {
+  margin-right: 6px;
+}
+
+.profile-trigger-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #171828;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  padding: 4px 12px 4px 5px;
+  cursor: pointer;
+  color: #ffffff;
+  font-family: inherit;
+  transition: all 0.2s ease;
+
+  &:hover,
+  &:focus {
+    background: #202235;
+    border-color: #8b5cf6;
+  }
+
+  .profile-avatar-circle {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%);
+    color: #ffffff;
+    font-size: 0.78rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    letter-spacing: 0.3px;
+  }
+
+  .profile-name-text {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #ffffff;
+    max-width: 140px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    @media (max-width: 480px) {
+      max-width: 80px;
+    }
+  }
+
+  .profile-chevron {
+    font-size: 0.85rem;
+    color: #9ca3af;
+  }
+}
+
+// Popover Panel Styling
+.popover-panel {
+  padding: 14px;
+  min-width: 250px;
+  background: #151624;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+}
+
+.popover-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 4px 10px 4px;
+
+  .popover-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%);
+    color: #ffffff;
+    font-size: 1rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .popover-user-meta {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+
+    .popover-name {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .popover-email {
+      font-size: 0.78rem;
+      color: #9ca3af;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+}
+
+.popover-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+  margin: 6px 0;
+}
+
+.popover-menu-list {
+  background: transparent;
+  padding: 0;
+}
+
+.popover-menu-item {
+  --background: transparent;
+  --color: #ffffff;
+  color: #ffffff;
+  --padding-start: 8px;
+  --inner-padding-end: 8px;
+  --min-height: 40px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  margin: 2px 0;
+
+  &:hover {
+    --background: rgba(255, 255, 255, 0.06);
+  }
+
+  ion-icon {
+    font-size: 1.1rem;
+    margin-right: 10px;
+    color: #a78bfa;
+  }
+
+  &.logout-action {
+    --color: #ef4444;
+    color: #ef4444;
+
+    ion-icon {
+      color: #ef4444;
+    }
+  }
+}
+
+.guest-sign-in-btn {
+  --background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%);
+  --border-radius: 999px;
+  font-weight: 600;
+  height: 32px;
+}

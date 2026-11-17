@@ -1,0 +1,702 @@
+.accounts-screen-content {
+  --background: #0d0e15;
+  background-color: #0d0e15;
+}
+
+.accounts-page-container {
+  max-width: 960px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 16px 12px 40px 12px;
+}
+
+// -------------------------------------------------------------
+// 1. Intro Header
+// -------------------------------------------------------------
+.page-intro-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 8px 4px 0 4px;
+
+  .intro-titles {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    .intro-eyebrow {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #a78bfa;
+    }
+
+    .intro-title {
+      font-size: 2.1rem;
+      font-weight: 800;
+      color: #ffffff;
+      margin: 0;
+      letter-spacing: -0.5px;
+    }
+
+    .intro-subtitle {
+      font-size: 0.92rem;
+      color: #9ca3af;
+      margin: 0;
+    }
+  }
+
+  .add-account-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%);
+    color: #ffffff;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 999px;
+    font-size: 0.92rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(139, 92, 246, 0.4);
+    transition: all 0.2s ease;
+    white-space: nowrap;
+
+    ion-icon {
+      font-size: 1.15rem;
+    }
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(139, 92, 246, 0.55);
+    }
+  }
+}
+
+// -------------------------------------------------------------
+// 2. Summary Card
+// -------------------------------------------------------------
+.accounts-summary-card {
+  background: linear-gradient(115deg, #4f46e5 0%, #7c3aed 50%, #8b5cf6 100%);
+  border-radius: 20px;
+  padding: 24px 28px;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  box-shadow: 0 8px 30px rgba(124, 58, 237, 0.35);
+
+  .summary-left-col {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    .summary-subtitle {
+      font-size: 0.76rem;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      color: rgba(255, 255, 255, 0.85);
+      text-transform: uppercase;
+    }
+
+    .summary-balance-display {
+      font-size: 2.6rem;
+      font-weight: 800;
+      letter-spacing: -0.8px;
+      margin: 0;
+      color: #ffffff;
+    }
+  }
+
+  .summary-right-col {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+
+    .metric-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+
+      .metric-val {
+        font-size: 1.45rem;
+        font-weight: 700;
+        color: #ffffff;
+      }
+
+      .metric-lbl {
+        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.8);
+      }
+    }
+
+    .metric-divider {
+      width: 1px;
+      height: 36px;
+      background: rgba(255, 255, 255, 0.2);
+    }
+  }
+}
+
+// -------------------------------------------------------------
+// 3. Search Bar
+// -------------------------------------------------------------
+.search-bar-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+
+  .search-pill-box {
+    flex: 1;
+    max-width: 420px;
+    background: #151624;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 999px;
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    .search-icon {
+      font-size: 1.1rem;
+      color: #9ca3af;
+    }
+
+    .custom-search-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #ffffff;
+      font-size: 0.9rem;
+
+      &::placeholder {
+        color: #6b7280;
+      }
+    }
+
+    .clear-search-btn {
+      background: transparent;
+      border: none;
+      color: #9ca3af;
+      cursor: pointer;
+      display: flex;
+      padding: 0;
+    }
+  }
+
+  .count-meta {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #9ca3af;
+  }
+}
+
+// -------------------------------------------------------------
+// 4. Accounts List Cards
+// -------------------------------------------------------------
+.accounts-grid-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.account-card-item {
+  background: #151624;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  transition: transform 0.15s ease, background-color 0.15s ease;
+
+  &:hover {
+    background: #1a1b2d;
+  }
+
+  .acc-main-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    .acc-icon-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: #202235;
+      color: #a78bfa;
+      font-size: 1.35rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+
+      &.credit-card {
+        background: rgba(236, 72, 153, 0.15);
+        color: #f472b6;
+      }
+    }
+
+    .acc-meta-column {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+
+      .acc-title {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #ffffff;
+        margin: 0;
+      }
+
+      .acc-badges-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+
+        .type-pill {
+          font-size: 0.72rem;
+          font-weight: 600;
+          padding: 2px 8px;
+          border-radius: 6px;
+          background: rgba(139, 92, 246, 0.15);
+          color: #a78bfa;
+
+          &.cc {
+            background: rgba(236, 72, 153, 0.15);
+            color: #f472b6;
+          }
+        }
+
+        .status-pill {
+          font-size: 0.72rem;
+          font-weight: 600;
+          padding: 2px 8px;
+          border-radius: 6px;
+          background: rgba(16, 185, 129, 0.15);
+          color: #34d399;
+
+          &.inactive {
+            background: rgba(107, 114, 128, 0.2);
+            color: #9ca3af;
+          }
+        }
+      }
+    }
+  }
+
+  .acc-main-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+
+    .acc-balance-block {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 2px;
+
+      .balance-label {
+        font-size: 0.72rem;
+        color: #6b7280;
+        text-transform: uppercase;
+        font-weight: 600;
+      }
+
+      .balance-amount {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #ffffff;
+        white-space: nowrap;
+      }
+    }
+
+    .acc-actions-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+
+      .action-btn {
+        background: transparent;
+        border: none;
+        color: #9ca3af;
+        font-size: 1.15rem;
+        cursor: pointer;
+        padding: 6px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.15s ease;
+
+        &.edit-btn:hover {
+          color: #a78bfa;
+          background: rgba(139, 92, 246, 0.15);
+        }
+
+        &.delete-btn:hover {
+          color: #ef4444;
+          background: rgba(239, 68, 68, 0.15);
+        }
+      }
+    }
+  }
+}
+
+// -------------------------------------------------------------
+// Empty & Error States
+// -------------------------------------------------------------
+.empty-state-box {
+  background: #151624;
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  border-radius: 18px;
+  padding: 40px 20px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  .empty-icon {
+    font-size: 48px;
+    color: #6b7280;
+  }
+
+  h4 {
+    font-size: 1.15rem;
+    color: #ffffff;
+    margin: 0;
+  }
+
+  p {
+    font-size: 0.9rem;
+    color: #9ca3af;
+    max-width: 360px;
+    margin: 0;
+  }
+
+  .empty-add-btn {
+    margin-top: 8px;
+    background: linear-gradient(135deg, #7c3aed, #8b5cf6);
+    color: #ffffff;
+    border: none;
+    border-radius: 999px;
+    padding: 8px 18px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+  }
+}
+
+.error-banner-box {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #f87171;
+  padding: 12px 16px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9rem;
+}
+
+.state-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 16px;
+  color: #9ca3af;
+
+  p {
+    margin-top: 10px;
+  }
+}
+
+// -------------------------------------------------------------
+// Modal Styling (Add / Edit Account)
+// -------------------------------------------------------------
+.account-modal {
+  --background: transparent;
+  --width: 92%;
+  --max-width: 480px;
+  --height: auto;
+  --max-height: 90vh;
+  --border-radius: 24px;
+
+  &::part(content) {
+    border-radius: 24px;
+    background: transparent;
+    box-shadow: 0 20px 48px rgba(0, 0, 0, 0.65);
+    max-height: 90vh;
+    overflow: hidden;
+  }
+}
+
+.modal-wrapper-card {
+  background: #181928;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 24px;
+  padding: 22px 22px 26px 22px;
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  max-height: 88vh;
+  box-sizing: border-box;
+}
+
+.modal-header-bar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  flex-shrink: 0;
+
+  .modal-title-box {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+
+    .modal-eyebrow {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #a78bfa;
+      letter-spacing: 0.8px;
+    }
+
+    h3 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: #ffffff;
+      margin: 0;
+    }
+  }
+
+  .modal-close-btn {
+    background: rgba(255, 255, 255, 0.08);
+    border: none;
+    color: #9ca3af;
+    font-size: 1.25rem;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+
+    &:hover {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.15);
+    }
+  }
+}
+
+.modal-body-content {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow-y: auto;
+  padding-bottom: 6px;
+}
+
+.form-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  .field-label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #9ca3af;
+  }
+
+  .modal-text-input,
+  .modal-select-input {
+    background: #202235;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 10px 14px;
+    color: #ffffff;
+    font-size: 0.95rem;
+    outline: none;
+    font-family: inherit;
+    box-sizing: border-box;
+    width: 100%;
+
+    &:focus {
+      border-color: #8b5cf6;
+    }
+
+    &::placeholder {
+      color: #6b7280;
+    }
+  }
+
+  .modal-select-input {
+    cursor: pointer;
+  }
+
+  &.checkbox-row {
+    margin-top: 4px;
+
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      user-select: none;
+
+      input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        accent-color: #8b5cf6;
+        cursor: pointer;
+      }
+
+      .checkbox-text {
+        font-size: 0.9rem;
+        color: #ffffff;
+        font-weight: 500;
+      }
+    }
+  }
+}
+
+.modal-submit-btn {
+  margin-top: 10px;
+  margin-bottom: 2px;
+  background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%);
+  color: #ffffff;
+  border: none;
+  min-height: 48px;
+  height: 48px;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(139, 92, 246, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  &:hover {
+    box-shadow: 0 6px 20px rgba(139, 92, 246, 0.55);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+// -------------------------------------------------------------
+// 7. Mobile Responsiveness (< 640px)
+// -------------------------------------------------------------
+@media (max-width: 640px) {
+  .accounts-page-container {
+    padding: 12px 10px 40px 10px;
+    gap: 14px;
+  }
+
+  .page-intro-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+
+    .intro-titles {
+      .intro-title {
+        font-size: 1.75rem;
+      }
+
+      .intro-subtitle {
+        font-size: 0.85rem;
+      }
+    }
+
+    .add-account-btn {
+      width: 100%;
+      justify-content: center;
+      padding: 12px 20px;
+    }
+  }
+
+  .accounts-summary-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 18px 20px;
+
+    .summary-left-col {
+      .summary-balance-display {
+        font-size: 2.2rem;
+      }
+    }
+
+    .summary-right-col {
+      width: 100%;
+      justify-content: space-around;
+      padding-top: 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.15);
+
+      .metric-item {
+        .metric-val {
+          font-size: 1.25rem;
+        }
+
+        .metric-lbl {
+          font-size: 0.75rem;
+        }
+      }
+    }
+  }
+
+  .account-card-item {
+    padding: 12px 14px;
+    gap: 10px;
+
+    .acc-main-left {
+      gap: 10px;
+
+      .acc-icon-avatar {
+        width: 38px;
+        height: 38px;
+        font-size: 1.15rem;
+      }
+
+      .acc-meta-column .acc-title {
+        font-size: 0.95rem;
+      }
+    }
+
+    .acc-main-right {
+      gap: 10px;
+
+      .acc-balance-block .balance-amount {
+        font-size: 1.05rem;
+      }
+    }
+  }
+
+  .account-modal {
+    --width: 94%;
+    --max-height: 92vh;
+
+    .modal-wrapper-card {
+      padding: 18px 16px;
+    }
+  }
+}

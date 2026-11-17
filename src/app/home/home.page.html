@@ -1,21 +1,487 @@
-<ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title> Blank </ion-title>
-  </ion-toolbar>
-</ion-header>
+@if (!supabase.currentUser()) {
+  <!-- ============================================================= -->
+  <!-- 1. SIGN IN SCREEN (When Logged Out)                           -->
+  <!-- ============================================================= -->
+  <ion-content [fullscreen]="true" class="auth-page-content">
+    <div class="auth-page-container">
+      <div class="auth-card-wrapper">
+        <!-- Trackerlio Brand Header -->
+        <div class="auth-brand-box">
+          <div class="auth-logo-badge">
+            <ion-icon name="wallet"></ion-icon>
+          </div>
+          <h1 class="auth-brand-title">Trackerlio</h1>
+          <span class="auth-brand-tagline">Expense & Budget Management</span>
+        </div>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">Blank</ion-title>
-    </ion-toolbar>
-  </ion-header>
+        <!-- Auth Card -->
+        <div class="auth-card">
+          <div class="auth-form-header">
+            <h2 class="form-title">Sign In</h2>
+            <p class="form-subtitle">Enter your credentials to access your account</p>
+          </div>
 
-  <div id="container">
-    <strong>Ready to create an app?</strong>
-    <p>
-      Start with Ionic
-      <a target="_blank" rel="noopener noreferrer" href="https://ionicframework.com/docs/components">UI Components</a>
-    </p>
-  </div>
-</ion-content>
+          <form (ngSubmit)="onSignIn()" class="auth-form">
+            <!-- Email Field -->
+            <div class="auth-field-group">
+              <label class="field-label" for="login-email">Email Address</label>
+              <div class="input-icon-wrap">
+                <ion-icon name="mail-outline" class="leading-icon"></ion-icon>
+                <input
+                  id="login-email"
+                  type="email"
+                  [(ngModel)]="email"
+                  name="email"
+                  placeholder="name@example.com"
+                  autocomplete="email"
+                  required
+                  class="auth-input"
+                />
+              </div>
+            </div>
+
+            <!-- Password Field -->
+            <div class="auth-field-group">
+              <label class="field-label" for="login-password">Password</label>
+              <div class="input-icon-wrap">
+                <ion-icon name="lock-closed-outline" class="leading-icon"></ion-icon>
+                <input
+                  id="login-password"
+                  [type]="showPassword ? 'text' : 'password'"
+                  [(ngModel)]="password"
+                  name="password"
+                  placeholder="Enter your password"
+                  autocomplete="current-password"
+                  required
+                  class="auth-input has-trailing-btn"
+                />
+                <button
+                  type="button"
+                  class="trailing-toggle-btn"
+                  (click)="toggleShowPassword()"
+                  tabindex="-1"
+                  aria-label="Toggle password visibility"
+                >
+                  <ion-icon [name]="showPassword ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
+                </button>
+              </div>
+            </div>
+
+            <!-- Error / Success Alert Banner -->
+            @if (authMessage(); as msg) {
+              <div class="auth-message-banner" [class]="msg.type">
+                <ion-icon
+                  [name]="msg.type === 'error' ? 'alert-circle-outline' : 'checkmark-circle-outline'"
+                ></ion-icon>
+                <span>{{ msg.text }}</span>
+              </div>
+            }
+
+            <!-- Sign In Submit Button -->
+            <button
+              type="submit"
+              class="btn-primary-action auth-submit-btn"
+              [disabled]="loadingAuth()"
+            >
+              @if (loadingAuth()) {
+                <ion-spinner name="crescent"></ion-spinner>
+                <span>Signing In...</span>
+              } @else {
+                <span>Sign In</span>
+                <ion-icon name="arrow-forward-outline"></ion-icon>
+              }
+            </button>
+          </form>
+
+          <div class="auth-card-footer">
+            <p>Access is restricted to authorized accounts managed by the administrator.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ion-content>
+} @else {
+  <!-- ============================================================= -->
+  <!-- 2. EXECUTIVE DASHBOARD (When Logged In)                       -->
+  <!-- ============================================================= -->
+  <app-header pageTitle="Dashboard"></app-header>
+
+  <ion-content [fullscreen]="true" class="dashboard-page-content">
+    <div class="dashboard-container">
+      <!-- Top Intro Header with "+ Add Expense" Button -->
+      <div class="dashboard-intro-header">
+        <div class="intro-titles">
+          <span class="intro-eyebrow">EXECUTIVE OVERVIEW</span>
+          <h1 class="intro-title">Dashboard</h1>
+          <p class="intro-subtitle">
+            Overview of your recent expenses, category distributions, and multi-month spending trends.
+          </p>
+        </div>
+
+        <button type="button" class="dashboard-add-btn" (click)="openAddExpenseModal()">
+          <ion-icon name="add-outline"></ion-icon>
+          <span>+ Add expense</span>
+        </button>
+      </div>
+
+      <!-- Loading State -->
+      @if (dashboardLoading()) {
+        <div class="dashboard-loading-state">
+          <ion-spinner name="crescent" color="primary"></ion-spinner>
+          <p>Loading your financial dashboard...</p>
+        </div>
+      } @else {
+        <!-- Key Metrics Cards Row -->
+        <div class="kpi-metrics-grid">
+          <!-- Card 1: Total Spent this month -->
+          <div class="kpi-card highlight-card">
+            <div class="kpi-card-header">
+              <span class="kpi-label">Total Spent &bull; {{ currentMonthName }} {{ currentYear }}</span>
+              <div class="kpi-icon-badge">
+                <ion-icon name="wallet-outline"></ion-icon>
+              </div>
+            </div>
+            <div class="kpi-amount-val">&#8377;{{ currentMonthTotal() | number:'1.2-2' }}</div>
+            <div class="kpi-footer-sub">
+              <span>{{ currentMonthCount() }} transactions recorded this month</span>
+            </div>
+          </div>
+
+          <!-- Card 2: Average Spend -->
+          <div class="kpi-card">
+            <div class="kpi-card-header">
+              <span class="kpi-label">Average Spend</span>
+              <div class="kpi-icon-badge secondary">
+                <ion-icon name="receipt-outline"></ion-icon>
+              </div>
+            </div>
+            <div class="kpi-amount-val">
+              &#8377;{{ (currentMonthCount() > 0 ? (currentMonthTotal() / currentMonthCount()) : 0) | number:'1.0-0' }}
+            </div>
+            <div class="kpi-footer-sub">
+              <span>Per transaction average this month</span>
+            </div>
+          </div>
+
+          <!-- Card 3: Top Category -->
+          <div class="kpi-card">
+            <div class="kpi-card-header">
+              <span class="kpi-label">Top Spending Category</span>
+              <div class="kpi-icon-badge accent">
+                <ion-icon name="pie-chart-outline"></ion-icon>
+              </div>
+            </div>
+            <div class="kpi-amount-val truncate-text">
+              {{ topCategory()?.name || 'None' }}
+            </div>
+            <div class="kpi-footer-sub">
+              @if (topCategory(); as top) {
+                <span>&#8377;{{ top.total | number:'1.0-0' }} &bull; {{ top.percentage }}% of total</span>
+              } @else {
+                <span>No category expenses yet</span>
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- TWO GRAPHS SECTION                                        -->
+        <!-- ========================================================= -->
+        <div class="dashboard-graphs-grid">
+          <!-- ======================================================= -->
+          <!-- GRAPH 1: BAR GRAPH (Last 5 Months Spending Trend)       -->
+          <!-- ======================================================= -->
+          <div class="graph-card bar-graph-card">
+            <div class="graph-card-header">
+              <div class="graph-header-left">
+                <div class="graph-header-title-row">
+                  <ion-icon name="bar-chart-outline" class="graph-title-icon"></ion-icon>
+                  <h3 class="graph-card-title">Spending Trend</h3>
+                </div>
+                <span class="graph-card-sub">Last 5 months expense comparison</span>
+              </div>
+
+              <!-- Active hover info pill -->
+              <div class="graph-badge-pill">
+                @if (activeBarData(); as bar) {
+                  <span>{{ bar.fullLabel }}: <strong>&#8377;{{ bar.total | number:'1.0-0' }}</strong></span>
+                } @else {
+                  <span>Hover on bars to inspect</span>
+                }
+              </div>
+            </div>
+
+            <!-- Bar Chart Content Area -->
+            <div class="bar-chart-wrapper">
+              <!-- Y-Axis Background Guides -->
+              <div class="chart-horizontal-guides">
+                <div class="guide-line"></div>
+                <div class="guide-line"></div>
+                <div class="guide-line"></div>
+                <div class="guide-line"></div>
+              </div>
+
+              <!-- Bars Column Container -->
+              <div class="bars-flex-container">
+                @for (bar of monthlyBarHistory(); track (bar.year + '-' + bar.month)) {
+                  <div
+                    class="bar-column-wrap"
+                    [class.is-current-month]="bar.isCurrent"
+                    (mouseenter)="onHoverBar(bar)"
+                    (mouseleave)="onHoverBar(null)"
+                  >
+                    <!-- Top Amount Label -->
+                    <div class="bar-top-value">
+                      &#8377;{{ bar.total | number:'1.0-0' }}
+                    </div>
+
+                    <!-- Bar Track & Fill -->
+                    <div class="bar-track-area">
+                      <div
+                        class="bar-fill-elem"
+                        [style.height.%]="bar.heightPercent"
+                        [class.active-current]="bar.isCurrent"
+                      ></div>
+                    </div>
+
+                    <!-- Bottom Month Label -->
+                    <div class="bar-bottom-label">
+                      <span class="month-name">{{ bar.label }}</span>
+                      @if (bar.isCurrent) {
+                        <span class="current-dot" title="Current Month"></span>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+
+            <!-- Bar Graph Footer -->
+            <div class="graph-card-footer">
+              <div class="footer-legend-item">
+                <span class="legend-color-box previous"></span>
+                <span>Previous Months</span>
+              </div>
+              <div class="footer-legend-item">
+                <span class="legend-color-box current"></span>
+                <span>Current Month (Active)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ======================================================= -->
+          <!-- GRAPH 2: PIE / DONUT CHART (Current Month by Category)   -->
+          <!-- ======================================================= -->
+          <div class="graph-card pie-graph-card">
+            <div class="graph-card-header">
+              <div class="graph-header-left">
+                <div class="graph-header-title-row">
+                  <ion-icon name="pie-chart-outline" class="graph-title-icon"></ion-icon>
+                  <h3 class="graph-card-title">Category Breakdown</h3>
+                </div>
+                <span class="graph-card-sub">{{ currentMonthName }} {{ currentYear }} spending by category</span>
+              </div>
+
+              <div class="graph-badge-pill">
+                <span>{{ categorySlices().length }} categories</span>
+              </div>
+            </div>
+
+            @if (categorySlices().length === 0) {
+              <!-- Empty State for Current Month -->
+              <div class="empty-chart-state">
+                <ion-icon name="pie-chart-outline"></ion-icon>
+                <h4>No expenses this month yet</h4>
+                <p>Add your first expense to see your category breakdown pie chart.</p>
+                <button type="button" class="btn-primary-action small-btn" (click)="openAddExpenseModal()">
+                  <ion-icon name="add-outline"></ion-icon>
+                  <span>Add Expense</span>
+                </button>
+              </div>
+            } @else {
+              <!-- Pie / Donut Chart & Category Breakdown Row -->
+              <div class="pie-content-layout">
+                <!-- Left: SVG Donut Chart -->
+                <div class="donut-chart-container">
+                  <div class="donut-svg-wrap">
+                    <svg viewBox="0 0 42 42" class="donut-svg-elem">
+                      <!-- Background Ring -->
+                      <circle
+                        class="donut-bg-ring"
+                        cx="21"
+                        cy="21"
+                        r="15.91549430918954"
+                        fill="transparent"
+                        stroke="rgba(255, 255, 255, 0.08)"
+                        stroke-width="4.8"
+                      ></circle>
+
+                      <!-- Slices Arcs -->
+                      @for (slice of categorySlices(); track slice.id) {
+                        <circle
+                          class="donut-segment"
+                          cx="21"
+                          cy="21"
+                          r="15.91549430918954"
+                          fill="transparent"
+                          [attr.stroke]="slice.color"
+                          stroke-width="5"
+                          [attr.stroke-dasharray]="slice.dashArray"
+                          [attr.stroke-dashoffset]="slice.dashOffset"
+                          [class.is-hovered]="activeCategorySlice()?.id === slice.id"
+                          (mouseenter)="onHoverSlice(slice)"
+                          (mouseleave)="onHoverSlice(null)"
+                        ></circle>
+                      }
+                    </svg>
+
+                    <!-- Center Text in Donut Hole -->
+                    <div class="donut-center-info">
+                      @if (activeCategorySlice(); as hoverSlice) {
+                        <span class="center-slice-title truncate-text">{{ hoverSlice.name }}</span>
+                        <span class="center-amount-val">&#8377;{{ hoverSlice.total | number:'1.0-0' }}</span>
+                        <span class="center-sub-pct">{{ hoverSlice.percentage }}% of total</span>
+                      } @else {
+                        <span class="center-sub-title">Total Spent</span>
+                        <span class="center-amount-val">&#8377;{{ currentMonthTotal() | number:'1.0-0' }}</span>
+                        <span class="center-sub-pct">{{ currentMonthCount() }} expenses</span>
+                      }
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Right: Categories Breakdown List with Amounts & Percentages -->
+                <div class="categories-legend-scroll">
+                  @for (slice of categorySlices(); track slice.id) {
+                    <div
+                      class="category-legend-row"
+                      [class.is-active-row]="activeCategorySlice()?.id === slice.id"
+                      (mouseenter)="onHoverSlice(slice)"
+                      (mouseleave)="onHoverSlice(null)"
+                    >
+                      <div class="legend-row-left">
+                        <span class="cat-dot-indicator" [style.background-color]="slice.color"></span>
+                        <div class="cat-name-box">
+                          <span class="cat-row-name">{{ slice.name }}</span>
+                          <span class="cat-row-count">{{ slice.count }} {{ slice.count === 1 ? 'expense' : 'expenses' }}</span>
+                        </div>
+                      </div>
+
+                      <div class="legend-row-right">
+                        <span class="cat-row-amount">&#8377;{{ slice.total | number:'1.0-0' }}</span>
+                        <span class="cat-row-pct" [style.color]="slice.color">{{ slice.percentage }}%</span>
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- ============================================================= -->
+    <!-- ADD EXPENSE MODAL                                             -->
+    <!-- ============================================================= -->
+    <ion-modal [isOpen]="isAddModalOpen()" (didDismiss)="closeAddExpenseModal()" class="home-expense-modal">
+      <ng-template>
+        <div class="modal-wrapper-card">
+          <!-- Modal Header -->
+          <div class="modal-header-bar">
+            <div class="modal-title-box">
+              <span class="modal-eyebrow">NEW RECORD</span>
+              <h3>Add Expense</h3>
+            </div>
+            <button type="button" class="modal-close-btn" (click)="closeAddExpenseModal()">
+              <ion-icon name="close-outline"></ion-icon>
+            </button>
+          </div>
+
+          <!-- Modal Body Form -->
+          <div class="modal-body-content">
+            <!-- Expense Name -->
+            <div class="form-field-group">
+              <label class="field-label">Expense Name *</label>
+              <input
+                type="text"
+                [(ngModel)]="newExpenseName"
+                placeholder="e.g. Grocery, Petrol, Dinner"
+                class="modal-text-input"
+              />
+            </div>
+
+            <!-- Amount (INR) -->
+            <div class="form-field-group">
+              <label class="field-label">Amount (&#8377;) *</label>
+              <input
+                type="number"
+                step="0.01"
+                min="0.01"
+                [(ngModel)]="newExpenseAmount"
+                placeholder="0.00"
+                class="modal-text-input"
+              />
+            </div>
+
+            <!-- Date -->
+            <div class="form-field-group">
+              <label class="field-label">Date *</label>
+              <input
+                type="date"
+                [(ngModel)]="newExpenseDate"
+                class="modal-text-input date-input"
+              />
+            </div>
+
+            <!-- Category Dropdown -->
+            <div class="form-field-group">
+              <label class="field-label">Category *</label>
+              <select [(ngModel)]="newExpenseCategoryId" class="modal-select-input">
+                @for (cat of categories(); track cat.id) {
+                  <option [value]="cat.id">{{ cat.category_name }}</option>
+                }
+              </select>
+            </div>
+
+            <!-- Account Dropdown -->
+            <div class="form-field-group">
+              <label class="field-label">Account *</label>
+              <select [(ngModel)]="newExpenseAccountId" class="modal-select-input">
+                @for (acc of accounts(); track acc.id) {
+                  <option [value]="acc.id">{{ acc.account_name }}</option>
+                }
+              </select>
+            </div>
+
+            <!-- Comments (Optional) -->
+            <div class="form-field-group">
+              <label class="field-label">Comments (Optional)</label>
+              <textarea
+                [(ngModel)]="newExpenseComments"
+                placeholder="Add optional notes..."
+                rows="2"
+                class="modal-text-input textarea-input"
+              ></textarea>
+            </div>
+
+            <!-- Save Expense Submit Button -->
+            <button
+              type="button"
+              class="modal-submit-btn"
+              [disabled]="isSubmittingExpense()"
+              (click)="onSaveExpense()"
+            >
+              @if (isSubmittingExpense()) {
+                <ion-spinner name="crescent"></ion-spinner>
+                <span>Saving...</span>
+              } @else {
+                <span>Save Expense</span>
+              }
+            </button>
+          </div>
+        </div>
+      </ng-template>
+    </ion-modal>
+  </ion-content>
+}

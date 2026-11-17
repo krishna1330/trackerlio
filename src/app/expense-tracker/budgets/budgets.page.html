@@ -1,0 +1,335 @@
+<app-header pageTitle="Budgets"></app-header>
+
+<ion-content [fullscreen]="true" class="budgets-screen-content">
+  <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <div class="budgets-page-container">
+    <!-- Top Hero Header -->
+    <div class="page-intro-header">
+      <div class="intro-titles">
+        <span class="intro-eyebrow">FINANCIAL GOALS</span>
+        <h1 class="intro-title">Budgets</h1>
+        <p class="intro-subtitle">Set monthly category limits and track your remaining balances.</p>
+      </div>
+
+      <div class="intro-actions">
+        <button type="button" class="add-budget-btn" (click)="openAddModal()">
+          <ion-icon name="add-outline"></ion-icon>
+          <span>Set budget</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Period Filter Card -->
+    <div class="period-filter-card">
+      <div class="filter-left-section">
+        <div class="filter-calendar-box">
+          <ion-icon name="calendar-outline"></ion-icon>
+        </div>
+        <div class="filter-text-meta">
+          <span class="filter-meta-label">Showing budgets for</span>
+          <span class="filter-meta-value">{{ selectedMonthLabel() }} {{ selectedYear() }}</span>
+        </div>
+      </div>
+
+      <div class="filter-right-section">
+        <!-- Year Select -->
+        <div class="filter-select-group">
+          <label class="select-micro-label">YEAR</label>
+          <div class="select-pill-wrapper">
+            <ion-select
+              [value]="selectedYear()"
+              (ionChange)="onYearChange($event.detail.value)"
+              interface="popover"
+              class="custom-period-select"
+            >
+              @for (y of years; track y) {
+                <ion-select-option [value]="y">{{ y }}</ion-select-option>
+              }
+            </ion-select>
+            <ion-icon name="chevron-down-outline" class="select-chevron"></ion-icon>
+          </div>
+        </div>
+
+        <!-- Month Select -->
+        <div class="filter-select-group">
+          <label class="select-micro-label">MONTH</label>
+          <div class="select-pill-wrapper">
+            <ion-select
+              [value]="selectedMonth()"
+              (ionChange)="onMonthChange($event.detail.value)"
+              interface="popover"
+              class="custom-period-select"
+            >
+              @for (m of months; track m.value) {
+                <ion-select-option [value]="m.value">{{ m.label }}</ion-select-option>
+              }
+            </ion-select>
+            <ion-icon name="chevron-down-outline" class="select-chevron"></ion-icon>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Summary Metrics Card -->
+    <div class="budgets-summary-card">
+      <div class="summary-left-col">
+        <span class="summary-subtitle">TOTAL MONTHLY BUDGET &bull; {{ selectedMonthLabel() }} {{ selectedYear() }}</span>
+        <h2 class="summary-amount-display">&#8377;{{ totalBudget() | number:'1.2-2' }}</h2>
+      </div>
+
+      <div class="summary-right-col">
+        <div class="metric-item">
+          <span class="metric-val">&#8377;{{ totalSpent() | number:'1.0-0' }}</span>
+          <span class="metric-lbl">Spent ({{ overallPercentage() }}%)</span>
+        </div>
+        <div class="metric-divider"></div>
+        <div class="metric-item">
+          <span class="metric-val" [class.negative]="totalRemaining() < 0">
+            &#8377;{{ getAbsoluteTotalRemaining() | number:'1.0-0' }}
+          </span>
+          <span class="metric-lbl">{{ totalRemaining() >= 0 ? 'Remaining' : 'Exceeded' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Search Bar Row -->
+    <div class="search-bar-row">
+      <div class="search-pill-box">
+        <ion-icon name="search-outline" class="search-icon"></ion-icon>
+        <input
+          type="text"
+          placeholder="Search budgets by category..."
+          [ngModel]="searchQuery()"
+          (ngModelChange)="searchQuery.set($event)"
+          class="custom-search-input"
+        />
+        @if (searchQuery()) {
+          <button type="button" class="clear-search-btn" (click)="searchQuery.set('')">
+            <ion-icon name="close-outline"></ion-icon>
+          </button>
+        }
+      </div>
+
+      <div class="count-meta">
+        <span>{{ filteredBudgets().length }} {{ filteredBudgets().length === 1 ? 'budget' : 'budgets' }}</span>
+      </div>
+    </div>
+
+    <!-- Error Banner -->
+    @if (errorMessage()) {
+      <div class="error-banner-box">
+        <ion-icon name="alert-circle-outline"></ion-icon>
+        <span>{{ errorMessage() }}</span>
+      </div>
+    }
+
+    <!-- Loading State -->
+    @if (loading()) {
+      <div class="state-container">
+        <ion-spinner name="crescent" color="primary"></ion-spinner>
+        <p>Loading budgets for {{ selectedMonthLabel() }} {{ selectedYear() }}...</p>
+      </div>
+    }
+
+    <!-- Budgets List -->
+    @if (!loading() && !errorMessage()) {
+      @if (filteredBudgets().length === 0) {
+        <div class="state-container empty-state-box">
+          <ion-icon name="pie-chart-outline" class="empty-icon"></ion-icon>
+          <h4>No Budgets Found</h4>
+          <p>
+            @if (searchQuery()) {
+              No budgets match "{{ searchQuery() }}" for {{ selectedMonthLabel() }} {{ selectedYear() }}.
+            } @else {
+              You haven't set any category budgets for {{ selectedMonthLabel() }} {{ selectedYear() }} yet.
+            }
+          </p>
+          <button type="button" class="empty-add-btn" (click)="openAddModal()">
+            <ion-icon name="add-outline"></ion-icon>
+            <span>Set Category Budget</span>
+          </button>
+        </div>
+      } @else {
+        <div class="budgets-grid-list">
+          @for (b of filteredBudgets(); track b.id) {
+            <div class="budget-card-item" [class.exceeded]="isExceeded(b)">
+              <!-- Card Header: Category info + Budget Amount + Actions -->
+              <div class="b-card-header">
+                <div class="b-header-left">
+                  <div class="b-avatar-icon" [class.warn]="isExceeded(b)">
+                    <ion-icon [name]="isExceeded(b) ? 'alert-outline' : 'pie-chart-outline'"></ion-icon>
+                  </div>
+                  <div class="b-title-col">
+                    <h3 class="b-cat-name">{{ getCategoryName(b) }}</h3>
+                    <div class="b-badges-row">
+                      @if (isExceeded(b)) {
+                        <span class="status-pill exceeded-tag">Exceeded by &#8377;{{ getExceededAmount(b) | number:'1.0-0' }}</span>
+                      } @else {
+                        <span class="status-pill on-track-tag">{{ 100 - getPercentage(b) }}% remaining</span>
+                      }
+                      <span class="status-pill active-tag" [class.inactive]="!b.is_active">
+                        {{ b.is_active ? 'Active' : 'Inactive' }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="b-header-right">
+                  <div class="b-amount-box">
+                    <span class="b-amount-lbl">Budget</span>
+                    <span class="b-amount-val">&#8377;{{ b.amount | number:'1.2-2' }}</span>
+                  </div>
+
+                  <div class="b-actions-group">
+                    <button
+                      type="button"
+                      class="action-btn edit-btn"
+                      (click)="openEditModal(b, $event)"
+                      title="Edit budget"
+                    >
+                      <ion-icon name="create-outline"></ion-icon>
+                    </button>
+
+                    <button
+                      type="button"
+                      class="action-btn delete-btn"
+                      (click)="onDeleteBudget(b, $event)"
+                      title="Delete budget"
+                    >
+                      <ion-icon name="trash-outline"></ion-icon>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Progress Bar -->
+              <div class="b-progress-section">
+                <div class="b-progress-track">
+                  <div
+                    class="b-progress-fill"
+                    [class.danger]="isExceeded(b)"
+                    [class.warning]="!isExceeded(b) && getPercentage(b) >= 80"
+                    [style.width.%]="getPercentage(b) > 100 ? 100 : getPercentage(b)"
+                  ></div>
+                </div>
+              </div>
+
+              <!-- Bottom Stats Row -->
+              <div class="b-stats-footer">
+                <div class="b-stat-col">
+                  <span class="b-stat-lbl">Spent</span>
+                  <span class="b-stat-val">&#8377;{{ getSpent(b) | number:'1.2-2' }}</span>
+                </div>
+
+                <div class="b-stat-col center">
+                  <span class="b-stat-lbl">Used</span>
+                  <span class="b-stat-val" [class.danger-text]="isExceeded(b)">{{ getPercentage(b) }}%</span>
+                </div>
+
+                <div class="b-stat-col right">
+                  <span class="b-stat-lbl">{{ getRemaining(b) >= 0 ? 'Remaining' : 'Over Limit' }}</span>
+                  <span class="b-stat-val" [class.danger-text]="getRemaining(b) < 0">
+                    &#8377;{{ getAbsoluteRemaining(b) | number:'1.2-2' }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    }
+  </div>
+
+  <!-- Add / Edit Budget Modal -->
+  <ion-modal [isOpen]="isModalOpen()" (didDismiss)="closeModal()" class="budget-modal">
+    <ng-template>
+      <div class="modal-wrapper-card">
+        <div class="modal-header-bar">
+          <div class="modal-title-box">
+            <span class="modal-eyebrow">{{ isEditing() ? 'UPDATE BUDGET' : 'NEW BUDGET' }}</span>
+            <h3>{{ isEditing() ? 'Edit Budget' : 'Set Category Budget' }}</h3>
+          </div>
+          <button type="button" class="modal-close-btn" (click)="closeModal()">
+            <ion-icon name="close-outline"></ion-icon>
+          </button>
+        </div>
+
+        <div class="modal-body-content">
+          <!-- Category Select (User's Categories Only) -->
+          <div class="form-field-group">
+            <label class="field-label">Category * (Your Categories)</label>
+            <select [(ngModel)]="formCategoryId" class="modal-select-input">
+              <option value="" disabled>Select category</option>
+              @for (cat of userCategories(); track cat.id) {
+                <option [value]="cat.id">{{ cat.category_name }}</option>
+              }
+            </select>
+            @if (userCategories().length === 0) {
+              <span class="field-hint">No categories found. Create a category first.</span>
+            }
+          </div>
+
+          <!-- Budget Amount -->
+          <div class="form-field-group">
+            <label class="field-label">Monthly Budget Limit (&#8377;) *</label>
+            <input
+              type="number"
+              step="0.01"
+              min="1"
+              [(ngModel)]="formAmount"
+              placeholder="e.g. 5000"
+              class="modal-text-input"
+            />
+          </div>
+
+          <!-- Month & Year Row -->
+          <div class="form-row-two-col">
+            <div class="form-field-group">
+              <label class="field-label">Month *</label>
+              <select [(ngModel)]="formMonth" class="modal-select-input">
+                @for (m of months; track m.value) {
+                  <option [value]="m.value">{{ m.label }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="form-field-group">
+              <label class="field-label">Year *</label>
+              <select [(ngModel)]="formYear" class="modal-select-input">
+                @for (y of years; track y) {
+                  <option [value]="y">{{ y }}</option>
+                }
+              </select>
+            </div>
+          </div>
+
+          <!-- Active Checkbox -->
+          <div class="form-field-group checkbox-row">
+            <label class="checkbox-container">
+              <input type="checkbox" [(ngModel)]="formIsActive" />
+              <span class="checkmark-box"></span>
+              <span class="checkbox-text">Budget is Active</span>
+            </label>
+          </div>
+
+          <!-- Submit Button -->
+          <button
+            type="button"
+            class="modal-submit-btn"
+            [disabled]="isSubmitting() || userCategories().length === 0"
+            (click)="onSaveBudget()"
+          >
+            @if (isSubmitting()) {
+              <ion-spinner name="crescent"></ion-spinner>
+            } @else {
+              <span>{{ isEditing() ? 'Update Budget' : 'Save Budget' }}</span>
+            }
+          </button>
+        </div>
+      </div>
+    </ng-template>
+  </ion-modal>
+</ion-content>

@@ -1,0 +1,428 @@
+<app-header pageTitle="Users" [showBackButton]="true"></app-header>
+
+<ion-content [fullscreen]="true" class="ion-padding users-page-content">
+  <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  @if (!isAdmin()) {
+    <!-- Access Denied for Non-Admin -->
+    <div class="access-denied-container">
+      <div class="access-denied-card">
+        <div class="denied-icon-wrap">
+          <ion-icon name="shield-outline"></ion-icon>
+        </div>
+        <h2>Admin Access Required</h2>
+        <p>
+          The Users management console is restricted exclusively to the primary administrator.
+          You do not have permission to view or manage users.
+        </p>
+        <ion-button routerLink="/expenses" fill="solid" class="return-btn">
+          Back to Expenses
+        </ion-button>
+      </div>
+    </div>
+  } @else {
+    <!-- Admin User Management Console -->
+    <div class="users-container">
+      <!-- Page Intro Header with Add User Button -->
+      <div class="users-intro-header">
+        <div class="intro-titles">
+          <span class="intro-eyebrow">ACCESS & DIRECTORY</span>
+          <h1 class="intro-title">Users</h1>
+          <p class="intro-subtitle">
+            Manage user accounts, credentials, and toggle active/inactive access.
+          </p>
+        </div>
+
+        <button type="button" class="add-user-btn" (click)="openAddUserModal()">
+          <ion-icon name="person-add-outline"></ion-icon>
+          <span>+ Add User</span>
+        </button>
+      </div>
+
+      <!-- Search & Status Summary Row -->
+      <div class="search-and-stats-row">
+        <div class="search-box-wrap">
+          <ion-searchbar
+            [value]="searchTerm()"
+            (ionInput)="searchTerm.set($any($event).target.value)"
+            placeholder="Search by name, email, or ID..."
+            debounce="200"
+          ></ion-searchbar>
+        </div>
+
+        <div class="users-stat-pills">
+          <span class="stat-pill total">
+            {{ profiles().length }} {{ profiles().length === 1 ? 'user' : 'users' }}
+          </span>
+          <span class="stat-pill active">
+            <span class="status-dot green"></span>
+            {{ activeCount() }} active
+          </span>
+          @if (inactiveCount() > 0) {
+            <span class="stat-pill inactive">
+              <span class="status-dot red"></span>
+              {{ inactiveCount() }} inactive
+            </span>
+          }
+        </div>
+      </div>
+
+      <!-- Loading State -->
+      @if (loading()) {
+        <div class="state-container">
+          <ion-spinner name="crescent" color="primary"></ion-spinner>
+          <p>Loading users from Supabase...</p>
+        </div>
+      }
+
+      <!-- Error State -->
+      @if (!loading() && errorMessage()) {
+        <div class="error-banner">
+          <ion-icon name="alert-circle-outline" class="error-icon"></ion-icon>
+          <div class="error-text">
+            <strong>Error loading users</strong>
+            <p>{{ errorMessage() }}</p>
+          </div>
+          <button type="button" class="retry-btn" (click)="fetchProfiles()">
+            <ion-icon name="refresh-outline"></ion-icon>
+            Retry
+          </button>
+        </div>
+      }
+
+      <!-- Users List -->
+      @if (!loading() && !errorMessage()) {
+        <div class="list-meta-header">
+          <span class="user-count">
+            Showing {{ filteredProfiles().length }} of {{ profiles().length }} users
+          </span>
+        </div>
+
+        @if (filteredProfiles().length === 0) {
+          <div class="state-container empty-state">
+            <div class="empty-icon-wrap">
+              <ion-icon name="person-outline"></ion-icon>
+            </div>
+            <h3>No users found</h3>
+            <p>
+              @if (searchTerm()) {
+                No users match "{{ searchTerm() }}".
+              } @else {
+                No user profiles exist in the database yet. Click "+ Add User" to create one.
+              }
+            </p>
+            @if (!searchTerm()) {
+              <button type="button" class="add-user-btn empty-action-btn" (click)="openAddUserModal()">
+                <ion-icon name="person-add-outline"></ion-icon>
+                <span>Add First User</span>
+              </button>
+            }
+          </div>
+        } @else {
+          <div class="users-cards-grid">
+            @for (user of filteredProfiles(); track user.id) {
+              <div class="user-record-card" [class.is-inactive]="!user.is_active">
+                <div class="user-card-main">
+                  <!-- User Avatar with Initials -->
+                  <div class="user-avatar-circle" [class.admin-avatar]="isAdminUser(user)">
+                    <span>{{ getUserInitials(user) }}</span>
+                  </div>
+
+                  <!-- User Details Column -->
+                  <div class="user-info-col">
+                    <div class="user-headline">
+                      <h2 class="user-display-name">{{ getFullName(user) }}</h2>
+                      <div class="user-badges-group">
+                        @if (isAdminUser(user)) {
+                          <span class="badge-role admin">ADMIN</span>
+                        } @else {
+                          <span class="badge-role member">USER</span>
+                        }
+
+                        @if (user.is_active) {
+                          <span class="badge-status active">ACTIVE</span>
+                        } @else {
+                          <span class="badge-status inactive">INACTIVE</span>
+                        }
+                      </div>
+                    </div>
+
+                    <!-- Email Address -->
+                    <div class="user-email-row">
+                      <ion-icon name="mail-outline"></ion-icon>
+                      <span class="email-text">{{ user.email }}</span>
+                    </div>
+
+                    <!-- Monospace ID with One-Click Copy -->
+                    <div class="user-id-row">
+                      <span class="id-tag">ID:</span>
+                      <code class="id-code">{{ user.id }}</code>
+                      <button
+                        type="button"
+                        class="copy-id-btn"
+                        (click)="copyUserId(user.id)"
+                        title="Copy User ID"
+                      >
+                        @if (copiedId() === user.id) {
+                          <ion-icon name="checkmark-outline" class="copied-icon"></ion-icon>
+                          <span class="copied-label">Copied</span>
+                        } @else {
+                          <ion-icon name="copy-outline"></ion-icon>
+                        }
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Right Side Admin Controls -->
+                <div class="user-card-actions">
+                  @if (isAdminUser(user)) {
+                    <!-- Protected Primary Admin Pill -->
+                    <div class="admin-protected-pill" title="Primary Admin account cannot be deactivated">
+                      <ion-icon name="shield-checkmark-outline"></ion-icon>
+                      <span>Primary Admin</span>
+                    </div>
+                  } @else {
+                    <!-- Active / Inactive Status Toggle -->
+                    <div class="status-toggle-control">
+                      <div class="toggle-status-info">
+                        <span class="toggle-label">Account Access</span>
+                        <span class="toggle-state" [class.active]="user.is_active">
+                          {{ user.is_active ? 'Active' : 'Inactive' }}
+                        </span>
+                      </div>
+
+                      <div class="toggle-switch-wrapper">
+                        @if (statusUpdatingId() === user.id) {
+                          <ion-spinner name="crescent" class="mini-status-spinner"></ion-spinner>
+                        } @else {
+                          <ion-toggle
+                            [checked]="user.is_active"
+                            (ionChange)="onToggleUserStatus(user, $event)"
+                            [disabled]="statusUpdatingId() === user.id"
+                            color="success"
+                            aria-label="Toggle user active status"
+                          ></ion-toggle>
+                        }
+                      </div>
+                    </div>
+
+                    <!-- Edit User Button -->
+                    <button
+                      type="button"
+                      class="user-edit-icon-btn"
+                      (click)="openEditModal(user, $event)"
+                      title="Edit user details"
+                    >
+                      <ion-icon name="create-outline"></ion-icon>
+                    </button>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        }
+      }
+    </div>
+
+    <!-- ============================================================= -->
+    <!-- ADD USER MODAL                                               -->
+    <!-- ============================================================= -->
+    <ion-modal [isOpen]="isAddModalOpen()" (didDismiss)="closeAddUserModal()" class="user-management-modal">
+      <ng-template>
+        <div class="modal-wrapper-card">
+          <!-- Modal Header -->
+          <div class="modal-header-bar">
+            <div class="modal-title-box">
+              <span class="modal-eyebrow">USER MANAGEMENT</span>
+              <h3>Add New User</h3>
+            </div>
+            <button type="button" class="modal-close-btn" (click)="closeAddUserModal()">
+              <ion-icon name="close-outline"></ion-icon>
+            </button>
+          </div>
+
+          <!-- Modal Body Content -->
+          <div class="modal-body-content">
+            <!-- First Name -->
+            <div class="form-field-group">
+              <label class="field-label">First Name *</label>
+              <input
+                type="text"
+                [(ngModel)]="newFirstName"
+                placeholder="e.g. Rahul, John, Priya"
+                class="modal-text-input"
+              />
+            </div>
+
+            <!-- Last Name -->
+            <div class="form-field-group">
+              <label class="field-label">Last Name (Optional)</label>
+              <input
+                type="text"
+                [(ngModel)]="newLastName"
+                placeholder="e.g. Sharma, Doe"
+                class="modal-text-input"
+              />
+            </div>
+
+            <!-- Email Address -->
+            <div class="form-field-group">
+              <label class="field-label">Email Address *</label>
+              <input
+                type="email"
+                [(ngModel)]="newEmail"
+                placeholder="e.g. user@example.com"
+                class="modal-text-input"
+              />
+            </div>
+
+            <!-- Password -->
+            <div class="form-field-group">
+              <label class="field-label">Password * (Min 6 characters)</label>
+              <div class="password-input-wrapper">
+                <input
+                  [type]="showPassword ? 'text' : 'password'"
+                  [(ngModel)]="newPassword"
+                  placeholder="Set account password"
+                  class="modal-text-input password-input"
+                />
+                <button
+                  type="button"
+                  class="password-toggle-btn"
+                  (click)="toggleShowPassword()"
+                  tabindex="-1"
+                >
+                  <ion-icon [name]="showPassword ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
+                </button>
+              </div>
+            </div>
+
+            <!-- Initial Account Status -->
+            <div class="form-field-group toggle-row-group">
+              <div class="toggle-row-left">
+                <label class="field-label-toggle">Account Status</label>
+                <span class="field-hint">New user will be active immediately upon creation</span>
+              </div>
+              <ion-toggle
+                [(ngModel)]="newIsActive"
+                color="success"
+                aria-label="Account Active status"
+              ></ion-toggle>
+            </div>
+
+            <!-- Admin Notice Banner -->
+            <div class="admin-notice-banner">
+              <ion-icon name="shield-checkmark-outline"></ion-icon>
+              <div class="notice-text">
+                <strong>Admin Controlled</strong>
+                <p>New users are created as regular users. Only you, the primary admin, can access this Users panel and modify statuses.</p>
+              </div>
+            </div>
+
+            <!-- Inline Error Banner -->
+            @if (modalErrorMessage()) {
+              <div class="modal-inline-error-banner">
+                <ion-icon name="alert-circle-outline"></ion-icon>
+                <div class="inline-error-text">
+                  <strong>Action Required</strong>
+                  <p>{{ modalErrorMessage() }}</p>
+                </div>
+              </div>
+            }
+
+            <!-- Submit Button -->
+            <button
+              type="button"
+              class="modal-submit-btn"
+              [disabled]="isSubmitting()"
+              (click)="onSaveUser()"
+            >
+              @if (isSubmitting()) {
+                <ion-spinner name="crescent"></ion-spinner>
+              } @else {
+                <span>Create User</span>
+              }
+            </button>
+          </div>
+        </div>
+      </ng-template>
+    </ion-modal>
+
+    <!-- ============================================================= -->
+    <!-- EDIT USER MODAL                                              -->
+    <!-- ============================================================= -->
+    <ion-modal [isOpen]="isEditModalOpen()" (didDismiss)="closeEditModal()" class="user-management-modal">
+      <ng-template>
+        <div class="modal-wrapper-card">
+          <!-- Modal Header -->
+          <div class="modal-header-bar">
+            <div class="modal-title-box">
+              <span class="modal-eyebrow">USER MANAGEMENT</span>
+              <h3>Edit User</h3>
+            </div>
+            <button type="button" class="modal-close-btn" (click)="closeEditModal()">
+              <ion-icon name="close-outline"></ion-icon>
+            </button>
+          </div>
+
+          <!-- Modal Body Content -->
+          <div class="modal-body-content">
+            <!-- First Name -->
+            <div class="form-field-group">
+              <label class="field-label">First Name *</label>
+              <input
+                type="text"
+                [(ngModel)]="editFirstName"
+                placeholder="First name"
+                class="modal-text-input"
+              />
+            </div>
+
+            <!-- Last Name -->
+            <div class="form-field-group">
+              <label class="field-label">Last Name</label>
+              <input
+                type="text"
+                [(ngModel)]="editLastName"
+                placeholder="Last name"
+                class="modal-text-input"
+              />
+            </div>
+
+            <!-- Account Active Status -->
+            <div class="form-field-group toggle-row-group">
+              <div class="toggle-row-left">
+                <label class="field-label-toggle">Account Active Status</label>
+                <span class="field-hint">
+                  {{ editIsActive ? 'User can log in and record expenses' : 'User access is blocked' }}
+                </span>
+              </div>
+              <ion-toggle
+                [(ngModel)]="editIsActive"
+                color="success"
+                aria-label="Account Active status"
+              ></ion-toggle>
+            </div>
+
+            <!-- Submit Button -->
+            <button
+              type="button"
+              class="modal-submit-btn"
+              [disabled]="isEditSubmitting()"
+              (click)="onUpdateUser()"
+            >
+              @if (isEditSubmitting()) {
+                <ion-spinner name="crescent"></ion-spinner>
+              } @else {
+                <span>Update User</span>
+              }
+            </button>
+          </div>
+        </div>
+      </ng-template>
+    </ion-modal>
+  }
+</ion-content>

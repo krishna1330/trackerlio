@@ -1,0 +1,235 @@
+<app-header pageTitle="Accounts"></app-header>
+
+<ion-content [fullscreen]="true" class="accounts-screen-content">
+  <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <div class="accounts-page-container">
+    <!-- Top Hero Header -->
+    <div class="page-intro-header">
+      <div class="intro-titles">
+        <span class="intro-eyebrow">FINANCIAL SOURCES</span>
+        <h1 class="intro-title">Accounts</h1>
+        <p class="intro-subtitle">Manage your bank accounts, credit cards, and cash wallets.</p>
+      </div>
+
+      <div class="intro-actions">
+        <button type="button" class="add-account-btn" (click)="openAddModal()">
+          <ion-icon name="add-outline"></ion-icon>
+          <span>Add account</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Summary Metrics Card -->
+    <div class="accounts-summary-card">
+      <div class="summary-left-col">
+        <span class="summary-subtitle">TOTAL AVAILABLE BALANCE</span>
+        <h2 class="summary-balance-display">&#8377;{{ totalBalance() | number:'1.2-2' }}</h2>
+      </div>
+
+      <div class="summary-right-col">
+        <div class="metric-item">
+          <span class="metric-val">{{ totalCount() }}</span>
+          <span class="metric-lbl">Total Accounts</span>
+        </div>
+        <div class="metric-divider"></div>
+        <div class="metric-item">
+          <span class="metric-val">{{ creditCardCount() }}</span>
+          <span class="metric-lbl">Credit Cards</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Search Input -->
+    <div class="search-bar-row">
+      <div class="search-pill-box">
+        <ion-icon name="search-outline" class="search-icon"></ion-icon>
+        <input
+          type="text"
+          placeholder="Search accounts by name..."
+          [ngModel]="searchQuery()"
+          (ngModelChange)="searchQuery.set($event)"
+          class="custom-search-input"
+        />
+        @if (searchQuery()) {
+          <button type="button" class="clear-search-btn" (click)="searchQuery.set('')">
+            <ion-icon name="close-outline"></ion-icon>
+          </button>
+        }
+      </div>
+
+      <div class="count-meta">
+        <span>{{ filteredAccounts().length }} {{ filteredAccounts().length === 1 ? 'account' : 'accounts' }}</span>
+      </div>
+    </div>
+
+    <!-- Error State -->
+    @if (errorMessage()) {
+      <div class="error-banner-box">
+        <ion-icon name="alert-circle-outline"></ion-icon>
+        <span>{{ errorMessage() }}</span>
+      </div>
+    }
+
+    <!-- Loading State -->
+    @if (loading()) {
+      <div class="state-container">
+        <ion-spinner name="crescent" color="primary"></ion-spinner>
+        <p>Loading accounts...</p>
+      </div>
+    }
+
+    <!-- Accounts List -->
+    @if (!loading() && !errorMessage()) {
+      @if (filteredAccounts().length === 0) {
+        <div class="state-container empty-state-box">
+          <ion-icon name="wallet-outline" class="empty-icon"></ion-icon>
+          <h4>No Accounts Found</h4>
+          <p>
+            @if (searchQuery()) {
+              No accounts match "{{ searchQuery() }}".
+            } @else {
+              Add your first bank account or credit card to begin tracking.
+            }
+          </p>
+          <button type="button" class="empty-add-btn" (click)="openAddModal()">
+            <ion-icon name="add-outline"></ion-icon>
+            <span>Create Account</span>
+          </button>
+        </div>
+      } @else {
+        <div class="accounts-grid-list">
+          @for (acc of filteredAccounts(); track acc.id) {
+            <div class="account-card-item">
+              <!-- Left: Avatar Icon & Details -->
+              <div class="acc-main-left">
+                <div class="acc-icon-avatar" [class.credit-card]="acc.is_credit_card">
+                  <ion-icon [name]="acc.is_credit_card ? 'card-outline' : 'business-outline'"></ion-icon>
+                </div>
+
+                <div class="acc-meta-column">
+                  <div class="acc-name-row">
+                    <h3 class="acc-title">{{ acc.account_name }}</h3>
+                  </div>
+
+                  <div class="acc-badges-row">
+                    <span class="type-pill" [class.cc]="acc.is_credit_card">
+                      {{ acc.is_credit_card ? 'Credit Card' : 'Bank / Cash' }}
+                    </span>
+                    <span class="status-pill" [class.inactive]="!acc.is_active">
+                      {{ acc.is_active ? 'Active' : 'Inactive' }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right: Balance & Actions -->
+              <div class="acc-main-right">
+                <div class="acc-balance-block">
+                  <span class="balance-label">Balance</span>
+                  <span class="balance-amount">&#8377;{{ acc.available_balance | number:'1.2-2' }}</span>
+                </div>
+
+                <div class="acc-actions-group">
+                  <button
+                    type="button"
+                    class="action-btn edit-btn"
+                    (click)="openEditModal(acc, $event)"
+                    title="Edit account"
+                  >
+                    <ion-icon name="create-outline"></ion-icon>
+                  </button>
+
+                  <button
+                    type="button"
+                    class="action-btn delete-btn"
+                    (click)="onDeleteAccount(acc, $event)"
+                    title="Delete account"
+                  >
+                    <ion-icon name="trash-outline"></ion-icon>
+                  </button>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    }
+  </div>
+
+  <!-- Add / Edit Account Modal -->
+  <ion-modal [isOpen]="isModalOpen()" (didDismiss)="closeModal()" class="account-modal">
+    <ng-template>
+      <div class="modal-wrapper-card">
+        <div class="modal-header-bar">
+          <div class="modal-title-box">
+            <span class="modal-eyebrow">{{ isEditing() ? 'UPDATE ACCOUNT' : 'NEW ACCOUNT' }}</span>
+            <h3>{{ isEditing() ? 'Edit Account' : 'Add Account' }}</h3>
+          </div>
+          <button type="button" class="modal-close-btn" (click)="closeModal()">
+            <ion-icon name="close-outline"></ion-icon>
+          </button>
+        </div>
+
+        <div class="modal-body-content">
+          <!-- Account Name -->
+          <div class="form-field-group">
+            <label class="field-label">Account Name *</label>
+            <input
+              type="text"
+              [(ngModel)]="accountName"
+              placeholder="e.g. HDFC Salary Account, SBI Card, Cash"
+              class="modal-text-input"
+            />
+          </div>
+
+          <!-- Available Balance -->
+          <div class="form-field-group">
+            <label class="field-label">Available Balance (&#8377;) *</label>
+            <input
+              type="number"
+              step="0.01"
+              [(ngModel)]="availableBalance"
+              placeholder="0.00"
+              class="modal-text-input"
+            />
+          </div>
+
+          <!-- Account Type -->
+          <div class="form-field-group">
+            <label class="field-label">Account Type</label>
+            <select [(ngModel)]="isCreditCard" class="modal-select-input">
+              <option [ngValue]="false">Bank Account / Debit / Cash</option>
+              <option [ngValue]="true">Credit Card</option>
+            </select>
+          </div>
+
+          <!-- Status -->
+          <div class="form-field-group checkbox-row">
+            <label class="checkbox-container">
+              <input type="checkbox" [(ngModel)]="isActive" />
+              <span class="checkmark-box"></span>
+              <span class="checkbox-text">Account is Active</span>
+            </label>
+          </div>
+
+          <!-- Submit Button -->
+          <button
+            type="button"
+            class="modal-submit-btn"
+            [disabled]="isSubmitting()"
+            (click)="onSaveAccount()"
+          >
+            @if (isSubmitting()) {
+              <ion-spinner name="crescent"></ion-spinner>
+            } @else {
+              <span>{{ isEditing() ? 'Update Account' : 'Save Account' }}</span>
+            }
+          </button>
+        </div>
+      </div>
+    </ng-template>
+  </ion-modal>
+</ion-content>
