@@ -50,33 +50,73 @@
     }
   }
 
-  .add-expense-btn {
-    display: flex;
+  .intro-actions {
+    display: inline-flex;
     align-items: center;
-    gap: 6px;
-    background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%);
-    color: #ffffff;
-    border: none;
-    padding: 10px 18px;
-    border-radius: 999px;
-    font-size: 0.92rem;
-    font-weight: 600;
-    cursor: pointer;
-    box-shadow: 0 4px 16px rgba(139, 92, 246, 0.4);
-    transition: all 0.2s ease;
-    white-space: nowrap;
+    gap: 10px;
+    flex-wrap: wrap;
 
-    ion-icon {
-      font-size: 1.15rem;
+    .expense-voice-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(139, 92, 246, 0.15);
+      border: 1px solid rgba(139, 92, 246, 0.4);
+      color: #c4b5fd;
+      padding: 10px 16px;
+      border-radius: 999px;
+      font-size: 0.92rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+
+      ion-icon {
+        font-size: 1.15rem;
+        color: #a78bfa;
+      }
+
+      &:hover {
+        background: rgba(139, 92, 246, 0.28);
+        border-color: #8b5cf6;
+        color: #ffffff;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 14px rgba(139, 92, 246, 0.3);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
     }
 
-    &:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 6px 20px rgba(139, 92, 246, 0.55);
-    }
+    .add-expense-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%);
+      color: #ffffff;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 999px;
+      font-size: 0.92rem;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(139, 92, 246, 0.4);
+      transition: all 0.2s ease;
+      white-space: nowrap;
 
-    &:active {
-      transform: translateY(0);
+      ion-icon {
+        font-size: 1.15rem;
+      }
+
+      &:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 20px rgba(139, 92, 246, 0.55);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
     }
   }
 }
@@ -1550,6 +1590,357 @@
 
     .modal-wrapper-card {
       padding: 18px 16px;
+    }
+  }
+
+  .intro-actions {
+    width: 100%;
+    display: flex;
+    gap: 10px;
+
+    .expense-voice-btn {
+      flex: 1;
+      justify-content: center;
+    }
+
+    .add-expense-btn {
+      flex: 2;
+      justify-content: center;
+    }
+  }
+}
+
+// -------------------------------------------------------------
+// Voice AI Expense Modal Styling
+// -------------------------------------------------------------
+.voice-expense-modal {
+  --background: rgba(10, 11, 18, 0.75);
+  --backdrop-opacity: 0.75;
+
+  &::part(content) {
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+}
+
+.voice-modal-card {
+  width: 100%;
+  max-width: 440px;
+  background: #151624;
+  border: 1px solid rgba(139, 92, 246, 0.25);
+  border-radius: 24px;
+  padding: 24px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  .voice-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    .voice-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(139, 92, 246, 0.15);
+      border: 1px solid rgba(139, 92, 246, 0.3);
+      padding: 5px 12px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #c4b5fd;
+
+      ion-icon {
+        font-size: 0.95rem;
+        color: #a78bfa;
+      }
+    }
+
+    .modal-close-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      color: #9ca3af;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.15);
+        color: #ffffff;
+      }
+    }
+  }
+
+  .voice-modal-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 12px 4px 6px 4px;
+  }
+
+  // State: AI Processing
+  .voice-processing-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 20px 0;
+
+    ion-spinner {
+      width: 48px;
+      height: 48px;
+      --color: #8b5cf6;
+    }
+
+    h4 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #ffffff;
+      margin: 0;
+    }
+
+    .processing-quote {
+      font-size: 0.95rem;
+      font-style: italic;
+      color: #c4b5fd;
+      background: rgba(139, 92, 246, 0.1);
+      border-left: 3px solid #8b5cf6;
+      padding: 8px 12px;
+      border-radius: 8px;
+      margin: 0;
+      max-width: 100%;
+      word-break: break-word;
+    }
+
+    .processing-hint {
+      font-size: 0.8rem;
+      color: #9ca3af;
+    }
+  }
+
+  // State: Listening & Ready
+  .voice-listening-state,
+  .voice-ready-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    gap: 14px;
+
+    h4 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #ffffff;
+      margin: 0;
+    }
+
+    .voice-example-hint {
+      font-size: 0.85rem;
+      color: #9ca3af;
+      margin: 0;
+      line-height: 1.4;
+      max-width: 320px;
+    }
+  }
+
+  .mic-wave-container {
+    position: relative;
+    width: 88px;
+    height: 88px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 8px 0;
+    cursor: pointer;
+
+    .mic-main-btn {
+      position: relative;
+      z-index: 2;
+      width: 68px;
+      height: 68px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%);
+      border: none;
+      color: #ffffff;
+      font-size: 1.8rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 6px 20px rgba(139, 92, 246, 0.5);
+      cursor: pointer;
+      transition: transform 0.2s ease;
+
+      &:hover {
+        transform: scale(1.05);
+      }
+
+      &.is-active {
+        background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+        box-shadow: 0 6px 24px rgba(239, 68, 68, 0.6);
+      }
+    }
+
+    .mic-pulse-ring {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: rgba(239, 68, 68, 0.35);
+      animation: pulse-wave 1.8s infinite ease-out;
+
+      &.ring-2 {
+        animation-delay: 0.6s;
+      }
+    }
+  }
+
+  @keyframes pulse-wave {
+    0% {
+      transform: scale(0.8);
+      opacity: 0.8;
+    }
+    100% {
+      transform: scale(1.6);
+      opacity: 0;
+    }
+  }
+
+  .live-transcript-bubble {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 8px 14px;
+    border-radius: 12px;
+    color: #e2e8f0;
+    font-size: 0.88rem;
+    font-style: italic;
+    max-width: 100%;
+    word-break: break-word;
+
+    ion-icon {
+      color: #f87171;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+  }
+
+  .voice-done-btn {
+    background: #202235;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+    font-size: 0.88rem;
+    font-weight: 600;
+    padding: 9px 18px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover {
+      background: rgba(139, 92, 246, 0.25);
+      border-color: #8b5cf6;
+    }
+  }
+
+  // Text fallback
+  .voice-fallback-box {
+    margin-top: 10px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+
+    .fallback-divider {
+      position: relative;
+      text-align: center;
+      margin: 8px 0;
+
+      &::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      span {
+        position: relative;
+        background: #151624;
+        padding: 0 10px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: #6b7280;
+        letter-spacing: 0.8px;
+      }
+    }
+
+    .fallback-input-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #202235;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 4px 6px 4px 14px;
+      transition: border-color 0.2s;
+
+      &:focus-within {
+        border-color: #8b5cf6;
+      }
+
+      .fallback-input {
+        flex: 1;
+        background: transparent;
+        border: none;
+        outline: none;
+        color: #ffffff;
+        font-size: 0.88rem;
+        font-family: inherit;
+
+        &::placeholder {
+          color: #6b7280;
+        }
+      }
+
+      .fallback-send-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        background: #8b5cf6;
+        border: none;
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 1.1rem;
+        transition: all 0.2s;
+
+        &:hover:not(:disabled) {
+          background: #7c3aed;
+        }
+
+        &:disabled {
+          opacity: 0.4;
+          cursor: not-allowed;
+        }
+      }
     }
   }
 }

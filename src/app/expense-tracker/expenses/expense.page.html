@@ -15,6 +15,10 @@
       </div>
 
       <div class="intro-actions">
+        <button type="button" class="expense-voice-btn" (click)="openVoiceModal()" title="Add expense by voice">
+          <ion-icon name="mic-outline"></ion-icon>
+          <span>Voice</span>
+        </button>
         <button type="button" class="add-expense-btn" (click)="openAddExpenseModal()">
           <ion-icon name="add-outline"></ion-icon>
           <span>Add expense</span>
@@ -593,6 +597,93 @@
               </button>
             }
           </div>
+        </div>
+      </div>
+    </ng-template>
+  </ion-modal>
+
+  <!-- Voice AI Expense Modal -->
+  <ion-modal [isOpen]="isVoiceModalOpen()" (didDismiss)="closeVoiceModal()" class="voice-expense-modal">
+    <ng-template>
+      <div class="voice-modal-card">
+        <div class="voice-modal-header">
+          <div class="voice-badge">
+            <ion-icon name="sparkles-outline"></ion-icon>
+            <span>AI Voice Expense</span>
+          </div>
+          <button type="button" class="modal-close-btn" (click)="closeVoiceModal()">
+            <ion-icon name="close-outline"></ion-icon>
+          </button>
+        </div>
+
+        <div class="voice-modal-body">
+          @if (isAiProcessing()) {
+            <div class="voice-processing-state">
+              <ion-spinner name="crescent" color="primary"></ion-spinner>
+              <h4>Analyzing with Groq AI...</h4>
+              <p class="processing-quote">"{{ voiceSpokenText() }}"</p>
+              <span class="processing-hint">Extracting amount, category & account</span>
+            </div>
+          } @else if (voiceService.isListening()) {
+            <div class="voice-listening-state">
+              <div class="mic-wave-container" (click)="stopVoiceAndProcess()">
+                <div class="mic-pulse-ring ring-1"></div>
+                <div class="mic-pulse-ring ring-2"></div>
+                <button type="button" class="mic-main-btn is-active">
+                  <ion-icon name="mic"></ion-icon>
+                </button>
+              </div>
+              <h4>Listening... Speak now</h4>
+              <p class="voice-example-hint">e.g. "I ate biryani of 400 rupees paid from SBI bank"</p>
+
+              @if (voiceService.liveTranscript()) {
+                <div class="live-transcript-bubble">
+                  <ion-icon name="mic-outline"></ion-icon>
+                  <span>"{{ voiceService.liveTranscript() }}"</span>
+                </div>
+              }
+
+              <button type="button" class="voice-done-btn" (click)="stopVoiceAndProcess()">
+                <span>Done Speaking</span>
+              </button>
+            </div>
+          } @else {
+            <div class="voice-ready-state">
+              <div class="mic-wave-container" (click)="startListeningVoice()">
+                <button type="button" class="mic-main-btn">
+                  <ion-icon name="mic-outline"></ion-icon>
+                </button>
+              </div>
+              <h4>Tap to Speak</h4>
+              <p class="voice-example-hint">
+                Speak naturally: e.g. "Paid 500 for petrol from SBI bank"
+              </p>
+
+              <!-- Text command fallback -->
+              <div class="voice-fallback-box">
+                <div class="fallback-divider">
+                  <span>OR TYPE YOUR EXPENSE</span>
+                </div>
+                <div class="fallback-input-row">
+                  <input
+                    type="text"
+                    [(ngModel)]="manualVoiceCommand"
+                    placeholder="e.g. Paid 350 for movie tickets from HDFC"
+                    (keyup.enter)="processTextCommand()"
+                    class="fallback-input"
+                  />
+                  <button
+                    type="button"
+                    class="fallback-send-btn"
+                    (click)="processTextCommand()"
+                    [disabled]="!manualVoiceCommand.trim()"
+                  >
+                    <ion-icon name="arrow-forward-outline"></ion-icon>
+                  </button>
+                </div>
+              </div>
+            </div>
+          }
         </div>
       </div>
     </ng-template>

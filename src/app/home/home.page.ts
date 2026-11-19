@@ -32,12 +32,17 @@ import {
   pricetagOutline,
   timeOutline,
   chevronDownOutline,
+  micOutline,
+  mic,
+  sparklesOutline,
 } from 'ionicons/icons';
 import { SupabaseService } from '../services/supabase.service';
 import { HeaderComponent } from '../components/header/header.component';
 import { ExpenseQueryService, CreateExpenseDTO } from '../database-queries/expense.query';
 import { CategoryQueryService } from '../database-queries/category.query';
 import { AccountQueryService } from '../database-queries/account.query';
+import { VoiceRecognitionService } from '../services/voice-recognition.service';
+import { VoiceExpenseAiService } from '../services/voice-expense-ai.service';
 import { Expense, Category, Account } from '../models/database.types';
 
 export interface MonthlyBarData {
@@ -102,6 +107,14 @@ export class HomePage implements OnInit {
   // Categories & Accounts for Add Expense Modal
   readonly categories = signal<Category[]>([]);
   readonly accounts = signal<Account[]>([]);
+
+  // Voice AI Expense State
+  readonly voiceService = inject(VoiceRecognitionService);
+  private readonly voiceAiService = inject(VoiceExpenseAiService);
+  readonly isVoiceModalOpen = signal(false);
+  readonly isAiProcessing = signal(false);
+  readonly voiceSpokenText = signal('');
+  manualVoiceCommand = '';
 
   // Add Expense Modal State
   readonly isAddModalOpen = signal(false);
@@ -216,6 +229,9 @@ export class HomePage implements OnInit {
       pricetagOutline,
       timeOutline,
       chevronDownOutline,
+      micOutline,
+      mic,
+      sparklesOutline,
     });
 
     // Automatically load or refresh dashboard data when user logs in and is active
@@ -365,6 +381,81 @@ export class HomePage implements OnInit {
 
   onHoverBar(bar: MonthlyBarData | null) {
     this.activeBarData.set(bar);
+  }
+
+  // -----------------------------------------------------------------
+  // Voice AI Expense Actions
+  // -----------------------------------------------------------------
+  openVoiceModal() {
+    this.manualVoiceCommand = '';
+    this.voiceSpokenText.set('');
+    this.isAiProcessing.set(false);
+    this.isVoiceModalOpen.set(true);
+
+    if (this.voiceService.isSupported()) {
+      setTimeout(() => {
+        this.startListeningVoice();
+      }, 300);
+    }
+  }
+
+  closeVoiceModal() {
+    this.voiceService.stopListening();
+    this.isVoiceModalOpen.set(false);
+    this.isAiProcessing.set(false);
+  }
+
+  async startListeningVoice() {
+    try {
+      const transcript = await this.voiceService.startListening();
+      if (transcript) {
+        await this.processVoiceText(transcript);
+      }
+    } catch (err: any) {
+      if (err?.message && !err.message.includes('No speech')) {
+        this.showToast(err.message, 'warning');
+      }
+    }
+  }
+
+  stopVoiceAndProcess() {
+    this.voiceService.stopListening();
+  }
+
+  async processTextCommand() {
+    const text = this.manualVoiceCommand.trim();
+    if (!text) return;
+    await this.processVoiceText(text);
+  }
+
+  async processVoiceText(text: string) {
+    this.voiceSpokenText.set(text);
+    this.isAiProcessing.set(true);
+
+    try {
+      const parsed = await this.voiceAiService.parseVoiceCommand(
+        text,
+        this.categories(),
+        this.accounts()
+      );
+
+      this.isVoiceModalOpen.set(false);
+      this.isAiProcessing.set(false);
+
+      // Pre-fill Add Expense form with parsed values
+      this.newExpenseName = parsed.expense_name || 'Expense';
+      this.newExpenseAmount = parsed.amount || null;
+      this.newExpenseDate = parsed.expense_date || this.getTodayDateString();
+      this.newExpenseCategoryId = parsed.category_id || '';
+      this.newExpenseAccountId = parsed.account_id || '';
+      this.newExpenseComments = parsed.comments || text;
+
+      this.isAddModalOpen.set(true);
+      this.showToast('AI filled your expense details! Review & Save.', 'success');
+    } catch (err: any) {
+      this.isAiProcessing.set(false);
+      this.showToast(err.message || 'Failed to process voice command', 'danger');
+    }
   }
 
   // -----------------------------------------------------------------
