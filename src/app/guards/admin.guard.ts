@@ -3,8 +3,8 @@ import { Router, type CanActivateFn } from '@angular/router';
 import { SupabaseService } from '../services/supabase.service';
 
 /**
- * Route guard that ensures only the designated administrator can access the Users route.
- * Non-admin users are redirected to /expenses.
+ * Route guard that ensures only the designated active administrator can access the Users route.
+ * Inactive users or non-admin users are redirected to /home.
  */
 export const adminGuard: CanActivateFn = async () => {
   const supabase = inject(SupabaseService);
@@ -12,6 +12,15 @@ export const adminGuard: CanActivateFn = async () => {
 
   // If already authenticated and recognized as admin
   if (supabase.isAdmin()) {
+    const profile = supabase.currentProfile();
+    if (profile && profile.is_active === false) {
+      await supabase.signOut();
+      supabase.currentSession.set(null);
+      supabase.currentUser.set(null);
+      supabase.currentProfile.set(null);
+      router.navigate(['/home']);
+      return false;
+    }
     return true;
   }
 
@@ -22,9 +31,18 @@ export const adminGuard: CanActivateFn = async () => {
     } = await supabase.client.auth.getSession();
 
     if (session?.user) {
+      const profile = await supabase.loadUserProfile(session.user.id);
+      if (profile && profile.is_active === false) {
+        await supabase.signOut();
+        supabase.currentSession.set(null);
+        supabase.currentUser.set(null);
+        supabase.currentProfile.set(null);
+        router.navigate(['/home']);
+        return false;
+      }
+
       supabase.currentSession.set(session);
       supabase.currentUser.set(session.user);
-      await supabase.loadUserProfile(session.user.id);
 
       if (supabase.isAdmin()) {
         return true;

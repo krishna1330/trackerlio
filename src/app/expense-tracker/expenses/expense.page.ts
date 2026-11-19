@@ -276,6 +276,13 @@ export class ExpensePage implements OnInit {
 
   readonly categoryCount = computed(() => this.categoryBreakdown().length);
 
+  // Entire Category View collapsible card state (closed by default)
+  readonly isCategoryViewExpanded = signal<boolean>(false);
+
+  toggleCategoryViewExpand() {
+    this.isCategoryViewExpanded.update((v) => !v);
+  }
+
   toggleCategoryExpand(catId: string, event?: Event) {
     if (event) event.stopPropagation();
     const current = new Set(this.expandedCategoryIds());
@@ -334,13 +341,6 @@ export class ExpensePage implements OnInit {
 
     if (catsRes.data) this.categories.set(catsRes.data);
     if (accsRes.data) this.accounts.set(accsRes.data);
-
-    if (this.categories().length > 0 && !this.newExpenseCategoryId) {
-      this.newExpenseCategoryId = this.categories()[0].id;
-    }
-    if (this.accounts().length > 0 && !this.newExpenseAccountId) {
-      this.newExpenseAccountId = this.accounts()[0].id;
-    }
   }
 
   onYearChange(year: number) {
@@ -413,14 +413,9 @@ export class ExpensePage implements OnInit {
     this.newExpenseName = '';
     this.newExpenseAmount = null;
     this.newExpenseDate = this.getTodayDateString();
+    this.newExpenseCategoryId = '';
+    this.newExpenseAccountId = '';
     this.newExpenseComments = '';
-
-    if (this.categories().length > 0 && !this.newExpenseCategoryId) {
-      this.newExpenseCategoryId = this.categories()[0].id;
-    }
-    if (this.accounts().length > 0 && !this.newExpenseAccountId) {
-      this.newExpenseAccountId = this.accounts()[0].id;
-    }
 
     this.isAddModalOpen.set(true);
   }
@@ -433,8 +428,8 @@ export class ExpensePage implements OnInit {
     this.newExpenseName = expense.expense_name || '';
     this.newExpenseAmount = expense.amount;
     this.newExpenseDate = expense.expense_date || this.getTodayDateString();
-    this.newExpenseCategoryId = expense.category_id || (this.categories()[0]?.id ?? '');
-    this.newExpenseAccountId = expense.account_id || (this.accounts()[0]?.id ?? '');
+    this.newExpenseCategoryId = expense.category_id || '';
+    this.newExpenseAccountId = expense.account_id || '';
     this.newExpenseComments = expense.comments || '';
 
     this.isAddModalOpen.set(true);

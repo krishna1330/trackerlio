@@ -95,8 +95,15 @@
     </div>
 
     <!-- Category View (Spending by category) -->
-    <div class="category-breakdown-card">
-      <div class="category-card-header">
+    <div class="category-breakdown-card" [class.is-collapsed]="!isCategoryViewExpanded()">
+      <div
+        class="category-card-header"
+        (click)="toggleCategoryViewExpand()"
+        role="button"
+        tabindex="0"
+        [attr.aria-expanded]="isCategoryViewExpanded()"
+        title="Click to expand/collapse category view"
+      >
         <div class="category-header-left">
           <span class="category-micro-tag">CATEGORY VIEW</span>
           <h3 class="category-card-title">Spending by category</h3>
@@ -105,13 +112,28 @@
           </span>
         </div>
 
-        <div class="category-total-pill">
-          <span>&#8377;{{ totalExpenses() | number:'1.0-0' }}</span>
+        <div class="category-header-right">
+          <div class="category-total-pill">
+            <span>&#8377;{{ totalExpenses() | number:'1.0-0' }}</span>
+          </div>
+
+          <button
+            type="button"
+            class="category-view-toggle-btn"
+            aria-label="Toggle category view"
+          >
+            <ion-icon
+              name="chevron-down-outline"
+              class="category-view-chevron"
+              [class.is-expanded]="isCategoryViewExpanded()"
+            ></ion-icon>
+          </button>
         </div>
       </div>
 
-      <!-- Categories Progress Bars List -->
-      <div class="category-rows-container">
+      <!-- Categories Progress Bars List (Collapsible, closed by default) -->
+      @if (isCategoryViewExpanded()) {
+        <div class="category-rows-container">
         @if (categoryBreakdown().length === 0) {
           <div class="empty-category-note">
             <span>No category data recorded for this month.</span>
@@ -266,7 +288,8 @@
           }
         }
       </div>
-    </div>
+    }
+  </div>
 
     <!-- Search & Live Status Bar -->
     <div class="search-and-status-row">
@@ -445,23 +468,37 @@
           <!-- Category -->
           <div class="form-field-group">
             <label class="field-label">Category *</label>
-            <select [(ngModel)]="newExpenseCategoryId" class="modal-select-input">
-              <option value="" disabled>Select category</option>
-              @for (cat of categories(); track cat.id) {
-                <option [value]="cat.id">{{ cat.category_name }}</option>
-              }
-            </select>
+            <div class="custom-select-wrapper">
+              <select
+                [(ngModel)]="newExpenseCategoryId"
+                class="modal-select-input"
+                [class.is-placeholder]="!newExpenseCategoryId"
+              >
+                <option value="" disabled selected>Select category</option>
+                @for (cat of categories(); track cat.id) {
+                  <option [value]="cat.id">{{ cat.category_name }}</option>
+                }
+              </select>
+              <ion-icon name="chevron-down-outline" class="select-chevron-icon"></ion-icon>
+            </div>
           </div>
 
           <!-- Account -->
           <div class="form-field-group">
             <label class="field-label">Account *</label>
-            <select [(ngModel)]="newExpenseAccountId" class="modal-select-input">
-              <option value="" disabled>Select account</option>
-              @for (acc of accounts(); track acc.id) {
-                <option [value]="acc.id">{{ acc.account_name }}</option>
-              }
-            </select>
+            <div class="custom-select-wrapper">
+              <select
+                [(ngModel)]="newExpenseAccountId"
+                class="modal-select-input"
+                [class.is-placeholder]="!newExpenseAccountId"
+              >
+                <option value="" disabled selected>Select account</option>
+                @for (acc of accounts(); track acc.id) {
+                  <option [value]="acc.id">{{ acc.account_name }}</option>
+                }
+              </select>
+              <ion-icon name="chevron-down-outline" class="select-chevron-icon"></ion-icon>
+            </div>
           </div>
 
           <!-- Comments -->

@@ -1,0 +1,193 @@
+<app-header pageTitle="Profile" [showBackButton]="true" defaultBackHref="/home"></app-header>
+
+<ion-content [fullscreen]="true" class="profile-page-content">
+  <div class="profile-page-container">
+    <!-- Intro Title Row -->
+    <div class="profile-intro-header">
+      <div class="intro-titles">
+        <span class="intro-eyebrow">ACCOUNT SETTINGS</span>
+        <h1 class="intro-title">User Profile</h1>
+        <p class="intro-subtitle">Manage your personal information and account preferences.</p>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    @if (loading()) {
+      <div class="profile-loading-state">
+        <ion-spinner name="crescent" color="primary"></ion-spinner>
+        <p>Loading your profile details...</p>
+      </div>
+    } @else {
+      <!-- Profile Hero Summary Card -->
+      <div class="profile-hero-card">
+        <div class="hero-avatar-box">
+          <div class="hero-avatar-circle">
+            {{ userInitials() }}
+          </div>
+        </div>
+
+        <div class="hero-meta-box">
+          <div class="hero-name-row">
+            <h2 class="hero-display-name">
+              {{ firstName }} {{ lastName }}
+            </h2>
+
+            <div class="hero-badges-row">
+              @if (role === 'admin' || isAdmin()) {
+                <span class="badge-role-admin">
+                  <ion-icon name="shield-checkmark-outline"></ion-icon>
+                  ADMIN
+                </span>
+              } @else {
+                <span class="badge-role-user">USER</span>
+              }
+
+              @if (isActive) {
+                <span class="badge-status-active">
+                  <span class="status-dot"></span>
+                  Active
+                </span>
+              } @else {
+                <span class="badge-status-inactive">Inactive</span>
+              }
+            </div>
+          </div>
+
+          <div class="hero-email-row">
+            <ion-icon name="mail-outline"></ion-icon>
+            <span>{{ email }}</span>
+          </div>
+
+          <div class="hero-joined-row">
+            <ion-icon name="calendar-outline"></ion-icon>
+            <span>Member since {{ formattedCreatedDate() }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Edit Form Card -->
+      <div class="profile-form-card">
+        <div class="form-card-header">
+          <h3 class="form-card-title">Personal Information</h3>
+          <p class="form-card-subtitle">Update your personal details below. Changes reflect across Trackerlio immediately.</p>
+        </div>
+
+        <!-- Alert Banner -->
+        @if (message(); as msg) {
+          <div class="profile-alert-banner" [class]="msg.type">
+            <ion-icon
+              [name]="msg.type === 'error' ? 'alert-circle-outline' : 'checkmark-circle-outline'"
+            ></ion-icon>
+            <span>{{ msg.text }}</span>
+          </div>
+        }
+
+        <form (ngSubmit)="onSaveProfile()" class="profile-form">
+          <div class="form-fields-grid">
+            <!-- First Name Field -->
+            <div class="form-field-group">
+              <label class="field-label" for="profile-first-name">
+                First Name <span class="required-star">*</span>
+              </label>
+              <div class="input-wrap">
+                <ion-icon name="person-outline" class="input-leading-icon"></ion-icon>
+                <input
+                  id="profile-first-name"
+                  type="text"
+                  [(ngModel)]="firstName"
+                  name="firstName"
+                  placeholder="Enter your first name"
+                  required
+                  class="profile-input"
+                />
+              </div>
+            </div>
+
+            <!-- Last Name Field -->
+            <div class="form-field-group">
+              <label class="field-label" for="profile-last-name">Last Name</label>
+              <div class="input-wrap">
+                <ion-icon name="person-outline" class="input-leading-icon"></ion-icon>
+                <input
+                  id="profile-last-name"
+                  type="text"
+                  [(ngModel)]="lastName"
+                  name="lastName"
+                  placeholder="Enter your last name"
+                  class="profile-input"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Email Address (Read-Only) -->
+          <div class="form-field-group">
+            <div class="field-label-row">
+              <label class="field-label" for="profile-email">Email Address</label>
+              <span class="read-only-pill">
+                <ion-icon name="lock-closed-outline"></ion-icon>
+                Primary Auth
+              </span>
+            </div>
+            <div class="input-wrap is-disabled">
+              <ion-icon name="mail-outline" class="input-leading-icon"></ion-icon>
+              <input
+                id="profile-email"
+                type="email"
+                [value]="email"
+                disabled
+                readonly
+                class="profile-input"
+              />
+            </div>
+            <span class="field-hint">Email address is tied to your login credentials and cannot be changed here.</span>
+          </div>
+
+          <!-- Account ID (Read-Only) -->
+          @if (userId) {
+            <div class="form-field-group">
+              <label class="field-label">User Identifier</label>
+              <div class="id-display-box">
+                <span class="id-val-text">{{ userId }}</span>
+                <button
+                  type="button"
+                  class="copy-id-btn"
+                  (click)="copyUserId()"
+                  title="Copy User ID"
+                >
+                  <ion-icon [name]="copiedId() ? 'checkmark-outline' : 'copy-outline'"></ion-icon>
+                  <span>{{ copiedId() ? 'Copied' : 'Copy' }}</span>
+                </button>
+              </div>
+            </div>
+          }
+
+          <!-- Form Submit Actions -->
+          <div class="form-actions-row">
+            <button
+              type="submit"
+              class="btn-save-profile"
+              [disabled]="saving()"
+            >
+              @if (saving()) {
+                <ion-spinner name="crescent"></ion-spinner>
+                <span>Saving Changes...</span>
+              } @else {
+                <ion-icon name="save-outline"></ion-icon>
+                <span>Save Profile</span>
+              }
+            </button>
+
+            <a
+              routerLink="/change-password"
+              class="btn-link-password"
+            >
+              <ion-icon name="key-outline"></ion-icon>
+              <span>Change Password</span>
+            </a>
+          </div>
+        </form>
+      </div>
+    }
+  </div>
+</ion-content>

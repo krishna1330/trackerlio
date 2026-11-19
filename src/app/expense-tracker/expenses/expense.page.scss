@@ -256,12 +256,25 @@
   display: flex;
   flex-direction: column;
   gap: 18px;
+  transition: all 0.25s ease;
+
+  &.is-collapsed {
+    padding: 18px 24px;
+    gap: 0;
+  }
 
   .category-card-header {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
     gap: 12px;
+    cursor: pointer;
+    user-select: none;
+    transition: opacity 0.15s ease;
+
+    &:hover {
+      opacity: 0.92;
+    }
 
     .category-header-left {
       display: flex;
@@ -289,6 +302,12 @@
       }
     }
 
+    .category-header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
     .category-total-pill {
       background: #202234;
       border: 1px solid rgba(255, 255, 255, 0.08);
@@ -297,6 +316,36 @@
       font-size: 0.9rem;
       font-weight: 600;
       color: #ffffff;
+    }
+
+    .category-view-toggle-btn {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #a78bfa;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      padding: 0;
+
+      &:hover {
+        background: rgba(139, 92, 246, 0.2);
+        color: #ffffff;
+        border-color: #8b5cf6;
+      }
+
+      .category-view-chevron {
+        font-size: 1.15rem;
+        transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+        &.is-expanded {
+          transform: rotate(180deg);
+        }
+      }
     }
   }
 
@@ -1077,7 +1126,7 @@
 .form-field-group {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 6px;
 
   .field-label {
     font-size: 0.8rem;
@@ -1085,21 +1134,22 @@
     color: #9ca3af;
   }
 
-  .modal-text-input,
-  .modal-select-input {
+  .modal-text-input {
     background: #202235;
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 10px;
-    padding: 10px 14px;
+    padding: 11px 14px;
     color: #ffffff;
     font-size: 0.92rem;
     outline: none;
     font-family: inherit;
     box-sizing: border-box;
     width: 100%;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
 
     &:focus {
       border-color: #8b5cf6;
+      box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
     }
 
     &::placeholder {
@@ -1107,8 +1157,67 @@
     }
   }
 
-  .modal-select-input {
-    cursor: pointer;
+  .custom-select-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+
+    .modal-select-input {
+      width: 100%;
+      background: #202235;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 11px 40px 11px 14px;
+      color: #ffffff;
+      font-size: 0.92rem;
+      outline: none;
+      font-family: inherit;
+      box-sizing: border-box;
+      cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+      &::-ms-expand {
+        display: none;
+      }
+
+      &:focus {
+        border-color: #8b5cf6;
+        box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
+      }
+
+      &.is-placeholder {
+        color: #9ca3af;
+      }
+
+      option {
+        background-color: #1a1c2d;
+        color: #ffffff;
+        padding: 8px 12px;
+      }
+
+      option[disabled] {
+        color: #6b7280;
+      }
+    }
+
+    .select-chevron-icon {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #a78bfa;
+      font-size: 1.1rem;
+      pointer-events: none;
+      transition: color 0.2s ease;
+    }
+
+    &:focus-within .select-chevron-icon {
+      color: #c4b5fd;
+    }
   }
 
   .date-input {
@@ -1319,9 +1428,31 @@
   .category-breakdown-card {
     padding: 16px 16px;
 
+    &.is-collapsed {
+      padding: 14px 16px;
+    }
+
     .category-card-header {
       .category-card-title {
         font-size: 1.1rem;
+      }
+
+      .category-header-right {
+        gap: 8px;
+      }
+
+      .category-total-pill {
+        padding: 3px 10px;
+        font-size: 0.82rem;
+      }
+
+      .category-view-toggle-btn {
+        width: 28px;
+        height: 28px;
+
+        .category-view-chevron {
+          font-size: 1rem;
+        }
       }
     }
   }

@@ -31,6 +31,7 @@ import {
   closeOutline,
   pricetagOutline,
   timeOutline,
+  chevronDownOutline,
 } from 'ionicons/icons';
 import { SupabaseService } from '../services/supabase.service';
 import { HeaderComponent } from '../components/header/header.component';
@@ -214,14 +215,35 @@ export class HomePage implements OnInit {
       closeOutline,
       pricetagOutline,
       timeOutline,
+      chevronDownOutline,
     });
 
-    // Automatically load or refresh dashboard data when user logs in
+    // Automatically load or refresh dashboard data when user logs in and is active
     effect(() => {
       const user = this.supabase.currentUser();
+      const profile = this.supabase.currentProfile();
       if (user) {
+        if (profile && profile.is_active === false) {
+          untracked(async () => {
+            await this.supabase.signOut();
+            this.supabase.currentSession.set(null);
+            this.supabase.currentUser.set(null);
+            this.supabase.currentProfile.set(null);
+            this.authMessage.set({
+              type: 'error',
+              text: 'Your account has been deactivated. Please contact the administrator.',
+            });
+          });
+          return;
+        }
         untracked(() => {
           this.loadDashboardData();
+        });
+      } else {
+        // Logged out: immediately clear any lingering auth messages and credentials
+        untracked(() => {
+          this.authMessage.set(null);
+          this.password = '';
         });
       }
     });
@@ -229,6 +251,18 @@ export class HomePage implements OnInit {
 
   async ngOnInit() {
     if (this.supabase.currentUser()) {
+      const profile = this.supabase.currentProfile();
+      if (profile && profile.is_active === false) {
+        await this.supabase.signOut();
+        this.supabase.currentSession.set(null);
+        this.supabase.currentUser.set(null);
+        this.supabase.currentProfile.set(null);
+        this.authMessage.set({
+          type: 'error',
+          text: 'Your account has been deactivated. Please contact the administrator.',
+        });
+        return;
+      }
       await this.loadDashboardData();
     } else {
       try {
@@ -236,6 +270,18 @@ export class HomePage implements OnInit {
           data: { session },
         } = await this.supabase.client.auth.getSession();
         if (session?.user) {
+          const profile = await this.supabase.loadUserProfile(session.user.id);
+          if (profile && profile.is_active === false) {
+            await this.supabase.signOut();
+            this.supabase.currentSession.set(null);
+            this.supabase.currentUser.set(null);
+            this.supabase.currentProfile.set(null);
+            this.authMessage.set({
+              type: 'error',
+              text: 'Your account has been deactivated. Please contact the administrator.',
+            });
+            return;
+          }
           this.supabase.currentSession.set(session);
           this.supabase.currentUser.set(session.user);
           await this.loadDashboardData();
@@ -328,14 +374,9 @@ export class HomePage implements OnInit {
     this.newExpenseName = '';
     this.newExpenseAmount = null;
     this.newExpenseDate = this.getTodayDateString();
+    this.newExpenseCategoryId = '';
+    this.newExpenseAccountId = '';
     this.newExpenseComments = '';
-
-    if (this.categories().length > 0 && !this.newExpenseCategoryId) {
-      this.newExpenseCategoryId = this.categories()[0].id;
-    }
-    if (this.accounts().length > 0 && !this.newExpenseAccountId) {
-      this.newExpenseAccountId = this.accounts()[0].id;
-    }
 
     this.isAddModalOpen.set(true);
   }
@@ -411,9 +452,8 @@ export class HomePage implements OnInit {
       password: this.password,
     });
 
-    this.loadingAuth.set(false);
-
     if (error) {
+      this.loadingAuth.set(false);
       let friendlyError = error.message;
       if (error.message.toLowerCase().includes('invalid login credentials')) {
         friendlyError = 'Invalid email or password. Please verify your credentials and try again.';
@@ -421,11 +461,32 @@ export class HomePage implements OnInit {
         friendlyError = 'Your email address has not been confirmed yet. Please contact the administrator.';
       }
       this.authMessage.set({ type: 'error', text: friendlyError });
-    } else if (data.session) {
-      this.authMessage.set({ type: 'success', text: 'Signed in successfully!' });
+      return;
+    }
+
+    if (data.session && data.user) {
+      // Fetch profile to verify if this user account is active
+      const profile = await this.supabase.loadUserProfile(data.user.id);
+
+      if (profile && profile.is_active === false) {
+        // Deactivated user: terminate auth immediately and display rejection banner!
+        await this.supabase.signOut();
+        this.supabase.currentSession.set(null);
+        this.supabase.currentUser.set(null);
+        this.supabase.currentProfile.set(null);
+        this.loadingAuth.set(false);
+        this.authMessage.set({
+          type: 'error',
+          text: 'Your account has been deactivated. Please contact the administrator.',
+        });
+        return;
+      }
+
+      this.loadingAuth.set(false);
+      this.authMessage.set(null);
       this.password = '';
       this.supabase.currentSession.set(data.session);
-      this.supabase.currentUser.set(data.session.user);
+      this.supabase.currentUser.set(data.user);
       await this.router.navigate(['/home']);
       await this.loadDashboardData();
     }

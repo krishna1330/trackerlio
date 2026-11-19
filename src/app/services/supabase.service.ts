@@ -43,6 +43,12 @@ export class SupabaseService {
     return false;
   });
 
+  readonly isUserActive = computed(() => {
+    const profile = this.currentProfile();
+    if (!profile) return true;
+    return profile.is_active !== false;
+  });
+
   constructor() {
     const sanitizedUrl = (environment.supabaseUrl || '')
       .replace(/\/rest\/v1\/?$/, '')
@@ -57,28 +63,49 @@ export class SupabaseService {
     });
 
     // Initialize current session, user and profile
-    this.supabase.auth.getSession().then(({ data: { session } }) => {
-      this.currentSession.set(session);
-      this.currentUser.set(session?.user ?? null);
+    this.supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session?.user?.id) {
-        this.loadUserProfile(session.user.id);
+        const profile = await this.loadUserProfile(session.user.id);
+        if (profile && profile.is_active === false) {
+          await this.signOut();
+          this.currentSession.set(null);
+          this.currentUser.set(null);
+          this.currentProfile.set(null);
+          return;
+        }
+        this.currentSession.set(session);
+        this.currentUser.set(session.user);
+      } else {
+        this.currentSession.set(null);
+        this.currentUser.set(null);
       }
     });
 
     // Listen to authentication changes
-    this.supabase.auth.onAuthStateChange((_event, session) => {
-      this.currentSession.set(session);
-      this.currentUser.set(session?.user ?? null);
+    this.supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user?.id) {
-        this.loadUserProfile(session.user.id);
+        const profile = await this.loadUserProfile(session.user.id);
+        if (profile && profile.is_active === false) {
+          await this.signOut();
+          this.currentSession.set(null);
+          this.currentUser.set(null);
+          this.currentProfile.set(null);
+          return;
+        }
+        this.currentSession.set(session);
+        this.currentUser.set(session.user);
       } else {
+        this.currentSession.set(null);
+        this.currentUser.set(null);
         this.currentProfile.set(null);
       }
     });
   }
 
   /**
-   * Fetch and update the active user's profile record
+   * Fetch and update the active user's profile record.
+   * If the user account is marked inactive (is_active === false),
+   * terminates the active session immediately to prevent unauthorized access.
    */
   async loadUserProfile(userId: string): Promise<Profile | null> {
     try {
@@ -91,6 +118,15 @@ export class SupabaseService {
       if (!error && data) {
         const profile = data as Profile;
         this.currentProfile.set(profile);
+
+        if (profile.is_active === false) {
+          // Inactive user! Terminate session immediately
+          await this.signOut();
+          this.currentSession.set(null);
+          this.currentUser.set(null);
+          this.currentProfile.set(null);
+        }
+
         return profile;
       }
       return null;

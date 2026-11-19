@@ -955,7 +955,7 @@
 .form-field-group {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 6px;
 
   .field-label {
     font-size: 0.8rem;
@@ -963,21 +963,22 @@
     color: #9ca3af;
   }
 
-  .modal-text-input,
-  .modal-select-input {
+  .modal-text-input {
     background: #202235;
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 10px;
-    padding: 10px 14px;
+    padding: 11px 14px;
     color: #ffffff;
     font-size: 0.92rem;
     outline: none;
     font-family: inherit;
     box-sizing: border-box;
     width: 100%;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
 
     &:focus {
       border-color: #8b5cf6;
+      box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
     }
 
     &::placeholder {
@@ -985,8 +986,67 @@
     }
   }
 
-  .modal-select-input {
-    cursor: pointer;
+  .custom-select-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+
+    .modal-select-input {
+      width: 100%;
+      background: #202235;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 11px 40px 11px 14px;
+      color: #ffffff;
+      font-size: 0.92rem;
+      outline: none;
+      font-family: inherit;
+      box-sizing: border-box;
+      cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+      &::-ms-expand {
+        display: none;
+      }
+
+      &:focus {
+        border-color: #8b5cf6;
+        box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
+      }
+
+      &.is-placeholder {
+        color: #9ca3af;
+      }
+
+      option {
+        background-color: #1a1c2d;
+        color: #ffffff;
+        padding: 8px 12px;
+      }
+
+      option[disabled] {
+        color: #6b7280;
+      }
+    }
+
+    .select-chevron-icon {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #a78bfa;
+      font-size: 1.1rem;
+      pointer-events: none;
+      transition: color 0.2s ease;
+    }
+
+    &:focus-within .select-chevron-icon {
+      color: #c4b5fd;
+    }
   }
 
   .date-input {

@@ -1,5 +1,6 @@
 import type { Routes } from '@angular/router';
 import { adminGuard } from './guards/admin.guard';
+import { authGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
   {
@@ -13,24 +14,39 @@ export const routes: Routes = [
   },
   {
     path: 'expenses',
+    canActivate: [authGuard],
     loadComponent: () =>
       import('./expense-tracker/expenses/expense.page').then((m) => m.ExpensePage),
   },
   {
     path: 'categories',
+    canActivate: [authGuard],
     loadComponent: () =>
       import('./expense-tracker/categories/categories.page').then((m) => m.CategoriesPage),
   },
   {
     path: 'accounts',
+    canActivate: [authGuard],
     loadComponent: () =>
       import('./expense-tracker/accounts/accounts.page').then((m) => m.AccountsPage),
   },
   {
     path: 'budgets',
+    canActivate: [authGuard],
     // Budgets management
     loadComponent: () =>
       import('./expense-tracker/budgets/budgets.page').then((m) => m.BudgetsPage),
+  },
+  {
+    path: 'profile',
+    canActivate: [authGuard],
+    loadComponent: () => import('./profile/profile.page').then((m) => m.ProfilePage),
+  },
+  {
+    path: 'change-password',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./change-password/change-password.page').then((m) => m.ChangePasswordPage),
   },
   {
     path: 'expense-tracker/expenses',

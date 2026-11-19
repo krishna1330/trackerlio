@@ -2,6 +2,10 @@
  * Trackerlio Unified Midnight-Purple Palette
  */
 :root {
+  // Global Typography (Poppins)
+  --ion-font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --ion-default-font: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
   // Primary (Electric Violet / Purple)
   --ion-color-primary: #8b5cf6;
   --ion-color-primary-rgb: 139, 92, 246;

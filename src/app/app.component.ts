@@ -73,13 +73,15 @@ export class AppComponent implements OnInit {
   readonly isAdmin = this.supabase.isAdmin;
 
   readonly displayName = computed(() => {
+    const profile = this.supabase.currentProfile();
     const user = this.currentUser();
     if (!user) return 'Guest';
 
-    const meta = user.user_metadata;
-    if (meta?.['first_name'] || meta?.['last_name']) {
-      const full = `${meta['first_name'] || ''} ${meta['last_name'] || ''}`.trim();
-      if (full) return full;
+    const firstName = (profile?.first_name || user.user_metadata?.['first_name'] || '').trim();
+    const lastName = (profile?.last_name || user.user_metadata?.['last_name'] || '').trim();
+
+    if (firstName || lastName) {
+      return `${firstName} ${lastName}`.trim();
     }
 
     if (user.email) {
@@ -91,13 +93,32 @@ export class AppComponent implements OnInit {
   });
 
   readonly userInitials = computed(() => {
-    const name = this.displayName();
-    if (!name || name === 'Guest') return 'U';
-    const parts = name.split(' ');
-    if (parts.length >= 2) {
-      return (parts[0][0] + parts[1][0]).toUpperCase();
+    const profile = this.supabase.currentProfile();
+    const user = this.currentUser();
+    if (!user) return 'U';
+
+    const firstName = (profile?.first_name || user.user_metadata?.['first_name'] || '').trim();
+    const lastName = (profile?.last_name || user.user_metadata?.['last_name'] || '').trim();
+
+    // First letters of first and last name
+    if (firstName && lastName) {
+      return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
     }
-    return name.slice(0, 2).toUpperCase();
+
+    // Single name handling
+    if (firstName) {
+      const parts = firstName.split(/\s+/);
+      if (parts.length >= 2) {
+        return `${parts[0].charAt(0)}${parts[1].charAt(0)}`.toUpperCase();
+      }
+      return firstName.charAt(0).toUpperCase();
+    }
+
+    if (user.email) {
+      return user.email.charAt(0).toUpperCase();
+    }
+
+    return 'U';
   });
 
   constructor() {

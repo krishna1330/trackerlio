@@ -384,21 +384,37 @@
             <!-- Category Dropdown -->
             <div class="form-field-group">
               <label class="field-label">Category *</label>
-              <select [(ngModel)]="newExpenseCategoryId" class="modal-select-input">
-                @for (cat of categories(); track cat.id) {
-                  <option [value]="cat.id">{{ cat.category_name }}</option>
-                }
-              </select>
+              <div class="custom-select-wrapper">
+                <select
+                  [(ngModel)]="newExpenseCategoryId"
+                  class="modal-select-input"
+                  [class.is-placeholder]="!newExpenseCategoryId"
+                >
+                  <option value="" disabled selected>Select category</option>
+                  @for (cat of categories(); track cat.id) {
+                    <option [value]="cat.id">{{ cat.category_name }}</option>
+                  }
+                </select>
+                <ion-icon name="chevron-down-outline" class="select-chevron-icon"></ion-icon>
+              </div>
             </div>
 
             <!-- Account Dropdown -->
             <div class="form-field-group">
               <label class="field-label">Account *</label>
-              <select [(ngModel)]="newExpenseAccountId" class="modal-select-input">
-                @for (acc of accounts(); track acc.id) {
-                  <option [value]="acc.id">{{ acc.account_name }}</option>
-                }
-              </select>
+              <div class="custom-select-wrapper">
+                <select
+                  [(ngModel)]="newExpenseAccountId"
+                  class="modal-select-input"
+                  [class.is-placeholder]="!newExpenseAccountId"
+                >
+                  <option value="" disabled selected>Select account</option>
+                  @for (acc of accounts(); track acc.id) {
+                    <option [value]="acc.id">{{ acc.account_name }}</option>
+                  }
+                </select>
+                <ion-icon name="chevron-down-outline" class="select-chevron-icon"></ion-icon>
+              </div>
             </div>
 
             <!-- Comments (Optional) -->

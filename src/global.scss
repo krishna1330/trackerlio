@@ -9,6 +9,9 @@
  * https://ionicframework.com/docs/layout/global-stylesheets
  */
 
+/* Google Font: Poppins */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&display=swap');
+
 /* Core CSS required for Ionic components to work properly */
 @import "@ionic/angular/css/core.css";
 
@@ -35,11 +38,54 @@
  * Safe Area Insets for Mobile Devices (Capacitor / Android / iOS)
  * ============================================================= */
 :root {
+  --ion-font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --ion-default-font: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --app-status-bar-height: 0px;
   --app-safe-area-top: env(safe-area-inset-top, 0px);
   --app-safe-area-bottom: env(safe-area-inset-bottom, 0px);
   --app-safe-area-left: env(safe-area-inset-left, 0px);
   --app-safe-area-right: env(safe-area-inset-right, 0px);
+}
+
+/* =============================================================
+ * Global Typography (Poppins across entire application)
+ * ============================================================= */
+html,
+body {
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button,
+input,
+optgroup,
+select,
+textarea,
+ion-app,
+ion-content,
+ion-page,
+ion-header,
+ion-toolbar,
+ion-title,
+ion-button,
+ion-item,
+ion-label,
+ion-card,
+ion-card-title,
+ion-card-subtitle,
+ion-card-content,
+ion-modal,
+ion-popover,
+ion-toast,
+ion-alert,
+ion-action-sheet,
+ion-menu,
+ion-searchbar,
+ion-select,
+ion-badge,
+ion-chip {
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
 /* Ensure Android Capacitor native app has a solid fallback if env() is 0px */

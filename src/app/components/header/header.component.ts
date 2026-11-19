@@ -1,4 +1,4 @@
-import { Component, Input, inject, computed } from '@angular/core';
+import { Component, Input, inject, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import {
@@ -27,6 +27,8 @@ import {
   peopleOutline,
   receiptOutline,
   homeOutline,
+  personOutline,
+  keyOutline,
 } from 'ionicons/icons';
 import { SupabaseService } from '../../services/supabase.service';
 
@@ -64,13 +66,15 @@ export class HeaderComponent {
   readonly isAdmin = this.supabase.isAdmin;
 
   readonly displayName = computed(() => {
+    const profile = this.supabase.currentProfile();
     const user = this.currentUser();
     if (!user) return 'Guest';
 
-    const meta = user.user_metadata;
-    if (meta?.['first_name'] || meta?.['last_name']) {
-      const full = `${meta['first_name'] || ''} ${meta['last_name'] || ''}`.trim();
-      if (full) return full;
+    const firstName = (profile?.first_name || user.user_metadata?.['first_name'] || '').trim();
+    const lastName = (profile?.last_name || user.user_metadata?.['last_name'] || '').trim();
+
+    if (firstName || lastName) {
+      return `${firstName} ${lastName}`.trim();
     }
 
     if (user.email) {
@@ -82,13 +86,32 @@ export class HeaderComponent {
   });
 
   readonly userInitials = computed(() => {
-    const name = this.displayName();
-    if (!name || name === 'Guest') return 'U';
-    const parts = name.split(' ');
-    if (parts.length >= 2) {
-      return (parts[0][0] + parts[1][0]).toUpperCase();
+    const profile = this.supabase.currentProfile();
+    const user = this.currentUser();
+    if (!user) return 'U';
+
+    const firstName = (profile?.first_name || user.user_metadata?.['first_name'] || '').trim();
+    const lastName = (profile?.last_name || user.user_metadata?.['last_name'] || '').trim();
+
+    // First letters of first and last name
+    if (firstName && lastName) {
+      return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
     }
-    return name.slice(0, 2).toUpperCase();
+
+    // Single name handling
+    if (firstName) {
+      const parts = firstName.split(/\s+/);
+      if (parts.length >= 2) {
+        return `${parts[0].charAt(0)}${parts[1].charAt(0)}`.toUpperCase();
+      }
+      return firstName.charAt(0).toUpperCase();
+    }
+
+    if (user.email) {
+      return user.email.charAt(0).toUpperCase();
+    }
+
+    return 'U';
   });
 
   constructor() {
@@ -102,10 +125,30 @@ export class HeaderComponent {
       peopleOutline,
       receiptOutline,
       homeOutline,
+      personOutline,
+      keyOutline,
     });
   }
 
+  readonly isPopoverOpen = signal<boolean>(false);
+  readonly popoverEvent = signal<Event | undefined>(undefined);
+
+  togglePopover(e: Event) {
+    e.stopPropagation();
+    if (this.isPopoverOpen()) {
+      this.isPopoverOpen.set(false);
+    } else {
+      this.popoverEvent.set(e);
+      this.isPopoverOpen.set(true);
+    }
+  }
+
+  closePopover() {
+    this.isPopoverOpen.set(false);
+  }
+
   async onSignOut() {
+    this.closePopover();
     await this.supabase.signOut();
     this.router.navigate(['/home']);
   }
