@@ -391,12 +391,6 @@ export class HomePage implements OnInit {
     this.voiceSpokenText.set('');
     this.isAiProcessing.set(false);
     this.isVoiceModalOpen.set(true);
-
-    if (this.voiceService.isSupported()) {
-      setTimeout(() => {
-        this.startListeningVoice();
-      }, 300);
-    }
   }
 
   closeVoiceModal() {
@@ -406,13 +400,14 @@ export class HomePage implements OnInit {
   }
 
   async startListeningVoice() {
+    if (this.voiceService.isListening()) return;
     try {
       const transcript = await this.voiceService.startListening();
       if (transcript) {
         await this.processVoiceText(transcript);
       }
     } catch (err: any) {
-      if (err?.message && !err.message.includes('No speech')) {
+      if (err?.message && !err.message.includes('No speech') && !err.message.includes('already started')) {
         this.showToast(err.message, 'warning');
       }
     }

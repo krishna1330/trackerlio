@@ -8,6 +8,7 @@ export class VoiceRecognitionService {
   readonly isListening = signal<boolean>(false);
   readonly liveTranscript = signal<string>('');
   readonly isSupported = signal<boolean>(false);
+  private isStarting = false;
 
   constructor() {
     this.initRecognition();
@@ -43,6 +44,11 @@ export class VoiceRecognitionService {
    * Starts listening to user voice and resolves with final transcript string.
    */
   startListening(): Promise<string> {
+    if (this.isListening() || this.isStarting) {
+      // Already running or starting; prevent duplicate invocation
+      return Promise.resolve('');
+    }
+
     return new Promise((resolve, reject) => {
       if (!this.recognition) {
         this.initRecognition();
@@ -57,11 +63,13 @@ export class VoiceRecognitionService {
         return;
       }
 
+      this.isStarting = true;
       this.liveTranscript.set('');
       let finalTranscript = '';
       let hasResolved = false;
 
       this.recognition.onstart = () => {
+        this.isStarting = false;
         this.isListening.set(true);
       };
 
@@ -79,6 +87,7 @@ export class VoiceRecognitionService {
       };
 
       this.recognition.onerror = (event: any) => {
+        this.isStarting = false;
         this.isListening.set(false);
         if (!hasResolved) {
           hasResolved = true;
@@ -86,7 +95,7 @@ export class VoiceRecognitionService {
           if (event.error === 'not-allowed') {
             message = 'Microphone permission denied. Please allow microphone access in your browser or device settings.';
           } else if (event.error === 'no-speech') {
-            message = 'No speech detected. Please try speaking again.';
+            message = 'No speech detected. Please tap and speak again.';
           } else if (event.error === 'network') {
             message = 'Network error during voice recognition. Please check your internet connection.';
           }
@@ -95,6 +104,7 @@ export class VoiceRecognitionService {
       };
 
       this.recognition.onend = () => {
+        this.isStarting = false;
         this.isListening.set(false);
         if (!hasResolved) {
           hasResolved = true;
@@ -110,6 +120,11 @@ export class VoiceRecognitionService {
       try {
         this.recognition.start();
       } catch (err: any) {
+        this.isStarting = false;
+        if (err?.message?.includes('already started')) {
+          this.isListening.set(true);
+          return; // Already listening normally, no error needed
+        }
         this.isListening.set(false);
         if (!hasResolved) {
           hasResolved = true;
@@ -123,13 +138,14 @@ export class VoiceRecognitionService {
    * Stops active listening session.
    */
   stopListening() {
-    if (this.recognition && this.isListening()) {
+    this.isStarting = false;
+    if (this.recognition) {
       try {
         this.recognition.stop();
       } catch (e) {
         // Ignored
       }
-      this.isListening.set(false);
     }
+    this.isListening.set(false);
   }
 }
