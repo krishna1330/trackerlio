@@ -131,59 +131,6 @@
           <p>Loading your financial dashboard...</p>
         </div>
       } @else {
-        <!-- Key Metrics Cards Row -->
-        <div class="kpi-metrics-grid">
-          <!-- Card 1: Total Spent this month -->
-          <div class="kpi-card highlight-card">
-            <div class="kpi-card-header">
-              <span class="kpi-label">Total Spent &bull; {{ currentMonthName }} {{ currentYear }}</span>
-              <div class="kpi-icon-badge">
-                <ion-icon name="wallet-outline"></ion-icon>
-              </div>
-            </div>
-            <div class="kpi-amount-val">&#8377;{{ currentMonthTotal() | number:'1.2-2' }}</div>
-            <div class="kpi-footer-sub">
-              <span>{{ currentMonthCount() }} transactions recorded this month</span>
-            </div>
-          </div>
-
-          <!-- Card 2: Average Spend -->
-          <div class="kpi-card">
-            <div class="kpi-card-header">
-              <span class="kpi-label">Average Spend</span>
-              <div class="kpi-icon-badge secondary">
-                <ion-icon name="receipt-outline"></ion-icon>
-              </div>
-            </div>
-            <div class="kpi-amount-val">
-              &#8377;{{ (currentMonthCount() > 0 ? (currentMonthTotal() / currentMonthCount()) : 0) | number:'1.0-0' }}
-            </div>
-            <div class="kpi-footer-sub">
-              <span>Per transaction average this month</span>
-            </div>
-          </div>
-
-          <!-- Card 3: Top Category -->
-          <div class="kpi-card">
-            <div class="kpi-card-header">
-              <span class="kpi-label">Top Spending Category</span>
-              <div class="kpi-icon-badge accent">
-                <ion-icon name="pie-chart-outline"></ion-icon>
-              </div>
-            </div>
-            <div class="kpi-amount-val truncate-text">
-              {{ topCategory()?.name || 'None' }}
-            </div>
-            <div class="kpi-footer-sub">
-              @if (topCategory(); as top) {
-                <span>&#8377;{{ top.total | number:'1.0-0' }} &bull; {{ top.percentage }}% of total</span>
-              } @else {
-                <span>No category expenses yet</span>
-              }
-            </div>
-          </div>
-        </div>
-
         <!-- ========================================================= -->
         <!-- TWO GRAPHS SECTION                                        -->
         <!-- ========================================================= -->

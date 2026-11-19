@@ -1,6 +1,8 @@
-import { Component, inject, computed } from '@angular/core';
+import { Component, inject, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { Capacitor } from '@capacitor/core';
+import { StatusBar, Style } from '@capacitor/status-bar';
 import {
   IonApp,
   IonSplitPane,
@@ -62,7 +64,7 @@ import { SupabaseService } from './services/supabase.service';
     IonBadge,
   ],
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
   private readonly supabase = inject(SupabaseService);
   private readonly router = inject(Router);
   private readonly menuCtrl = inject(MenuController);
@@ -112,6 +114,21 @@ export class AppComponent {
       cardOutline,
       pieChartOutline,
     });
+  }
+
+  async ngOnInit() {
+    if (Capacitor.isNativePlatform()) {
+      try {
+        await StatusBar.setStyle({ style: Style.Dark });
+        await StatusBar.setBackgroundColor({ color: '#0f101a' });
+        const info = await StatusBar.getInfo();
+        if (info && typeof info.height === 'number' && info.height > 0) {
+          document.documentElement.style.setProperty('--app-status-bar-height', `${info.height}px`);
+        }
+      } catch (err) {
+        console.warn('StatusBar initialization:', err);
+      }
+    }
   }
 
   async closeMenuOnMobile() {

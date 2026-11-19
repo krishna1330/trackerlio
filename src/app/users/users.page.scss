@@ -75,7 +75,7 @@
 .users-container {
   max-width: 980px;
   margin: 0 auto;
-  padding: 16px 10px 48px 10px;
+  padding: 16px 10px calc(48px + var(--app-safe-area-bottom, env(safe-area-inset-bottom, 0px))) 10px;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -952,7 +952,7 @@
 // -------------------------------------------------------------
 @media (max-width: 640px) {
   .users-container {
-    padding: 10px 8px 36px 8px;
+    padding: 10px 8px calc(36px + var(--app-safe-area-bottom, env(safe-area-inset-bottom, 0px))) 8px;
     gap: 14px;
   }
 

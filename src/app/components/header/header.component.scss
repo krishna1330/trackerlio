@@ -1,5 +1,8 @@
 .custom-app-header {
   box-shadow: 0 1px 6px rgba(0, 0, 0, 0.2);
+  background-color: #0f101a;
+  /* Accommodates status bar on Android/iOS Capacitor and notched devices */
+  padding-top: var(--app-safe-area-top, env(safe-area-inset-top, 0px));
 }
 
 .header-toolbar {
@@ -8,8 +11,9 @@
   --color: #ffffff;
   --border-width: 0 0 1px 0;
   --border-color: rgba(255, 255, 255, 0.08);
-  padding: 0 6px;
+  padding: 0 8px;
   min-height: 56px;
+  --min-height: 56px;
 }
 
 // Brand section
@@ -22,7 +26,15 @@
 .menu-toggle-btn {
   --color: #ffffff;
   color: #ffffff;
-  margin-right: 4px;
+  margin-right: 2px;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  --padding-start: 4px;
+  --padding-end: 4px;
 }
 
 .brand-container {
@@ -49,6 +61,7 @@
     justify-content: center;
     font-size: 1.2rem;
     box-shadow: 0 3px 10px rgba(139, 92, 246, 0.4);
+    flex-shrink: 0;
   }
 
   .brand-title {
@@ -108,6 +121,7 @@
     align-items: center;
     justify-content: center;
     letter-spacing: 0.3px;
+    flex-shrink: 0;
   }
 
   .profile-name-text {
@@ -118,15 +132,43 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-
-    @media (max-width: 480px) {
-      max-width: 80px;
-    }
   }
 
   .profile-chevron {
     font-size: 0.85rem;
     color: #9ca3af;
+  }
+}
+
+// Mobile responsive header adaptations
+@media (max-width: 576px) {
+  .page-title-separator,
+  .page-sub-title {
+    display: none;
+  }
+
+  .brand-container {
+    padding: 2px 4px;
+    gap: 6px;
+
+    .brand-title {
+      font-size: 1.1rem;
+    }
+
+    .brand-logo-icon {
+      width: 30px;
+      height: 30px;
+      font-size: 1.05rem;
+    }
+  }
+
+  .profile-trigger-btn {
+    padding: 3px 6px 3px 3px;
+    gap: 4px;
+
+    .profile-name-text {
+      display: none; // Shows avatar circle + dropdown arrow for a clean look
+    }
   }
 }
 
