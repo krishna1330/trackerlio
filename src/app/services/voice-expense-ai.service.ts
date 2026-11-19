@@ -18,15 +18,16 @@ export class VoiceExpenseAiService {
   private readonly supabase = inject(SupabaseService);
 
   /**
-   * Invokes the Supabase Edge Function `parse-voice-expense`
+   * Invokes the Supabase Edge Function `bright-processor`
    * which accesses the secret GROQ_API_KEY server-side.
    */
   async parseVoiceCommand(
     voiceText: string,
     categories: Category[],
-    accounts: Account[]
+    accounts: Account[],
+    audioBase64?: string,
+    audioMimeType?: string
   ): Promise<ParsedVoiceExpense> {
-    // Try 'bright-processor' (the name assigned by Supabase) or 'parse-voice-expense'
     const functionName = 'bright-processor';
 
     const { data, error } = await this.supabase.client.functions.invoke(
@@ -34,6 +35,8 @@ export class VoiceExpenseAiService {
       {
         body: {
           voiceText,
+          audioBase64,
+          audioMimeType,
           categories,
           accounts,
         },

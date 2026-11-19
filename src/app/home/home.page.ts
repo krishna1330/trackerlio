@@ -394,44 +394,62 @@ export class HomePage implements OnInit {
   }
 
   closeVoiceModal() {
-    this.voiceService.stopListening();
+    this.voiceService.cancelListening();
     this.isVoiceModalOpen.set(false);
     this.isAiProcessing.set(false);
   }
 
   async startListeningVoice() {
     if (this.voiceService.isListening()) return;
+    this.voiceSpokenText.set('');
     try {
-      const transcript = await this.voiceService.startListening();
-      if (transcript) {
-        await this.processVoiceText(transcript);
-      }
+      await this.voiceService.startListening();
     } catch (err: any) {
-      if (err?.message && !err.message.includes('No speech') && !err.message.includes('already started')) {
-        this.showToast(err.message, 'warning');
-      }
+      console.warn('Voice listening start error:', err);
+      this.showToast('Could not access microphone. Please check permissions.', 'warning');
     }
   }
 
-  stopVoiceAndProcess() {
-    this.voiceService.stopListening();
+  async stopVoiceAndProcess() {
+    if (!this.voiceService.isListening()) return;
+    this.isAiProcessing.set(true);
+    try {
+      const result = await this.voiceService.stopListening();
+      await this.processVoiceResult(result);
+    } catch (err: any) {
+      this.isAiProcessing.set(false);
+      this.showToast(err.message || 'Failed to capture voice recording', 'danger');
+    }
   }
 
   async processTextCommand() {
     const text = this.manualVoiceCommand.trim();
     if (!text) return;
-    await this.processVoiceText(text);
+    await this.processVoiceResult({
+      text,
+      audioBase64: '',
+      mimeType: '',
+    });
   }
 
-  async processVoiceText(text: string) {
-    this.voiceSpokenText.set(text);
+  async processVoiceResult(result: { text: string; audioBase64: string; mimeType: string }) {
     this.isAiProcessing.set(true);
+    const displayText = result.text || (result.audioBase64 ? 'Processing your voice note...' : '');
+    this.voiceSpokenText.set(displayText);
+
+    if (!result.text && !result.audioBase64) {
+      this.isAiProcessing.set(false);
+      this.showToast('No speech detected. Please tap and speak clearly.', 'warning');
+      return;
+    }
 
     try {
       const parsed = await this.voiceAiService.parseVoiceCommand(
-        text,
+        result.text,
         this.categories(),
-        this.accounts()
+        this.accounts(),
+        result.audioBase64,
+        result.mimeType
       );
 
       this.isVoiceModalOpen.set(false);
@@ -443,7 +461,7 @@ export class HomePage implements OnInit {
       this.newExpenseDate = parsed.expense_date || this.getTodayDateString();
       this.newExpenseCategoryId = parsed.category_id || '';
       this.newExpenseAccountId = parsed.account_id || '';
-      this.newExpenseComments = parsed.comments || text;
+      this.newExpenseComments = parsed.comments || result.text;
 
       this.isAddModalOpen.set(true);
       this.showToast('AI filled your expense details! Review & Save.', 'success');

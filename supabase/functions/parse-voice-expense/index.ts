@@ -1,4 +1,5 @@
-// Supabase Edge Function: parse-voice-expense
+// Supabase Edge Function: parse-voice-expense (bright-processor)
+// Supports both direct voiceText and audioBase64 (via Groq Whisper Large V3 Turbo)
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers':
@@ -15,16 +16,9 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { voiceText, categories, accounts } = await req.json();
+    const { voiceText, audioBase64, audioMimeType, categories, accounts } =
+      await req.json();
 
-    if (!voiceText || typeof voiceText !== 'string' || !voiceText.trim()) {
-      return new Response(JSON.stringify({ error: 'voiceText is required' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    // Safely read and trim the Groq API key from Supabase Secrets
     const rawKey = Deno.env.get('GROQ_API_KEY');
     const GROQ_API_KEY = rawKey ? rawKey.trim() : null;
 
@@ -35,6 +29,86 @@ Deno.serve(async (req) => {
         }),
         {
           status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    let spokenSentence = (voiceText || '').trim();
+
+    // 1. If voiceText is empty and audio is provided (e.g. Android WebView / Mobile App)
+    if (!spokenSentence && audioBase64) {
+      try {
+        const binaryString = atob(audioBase64);
+        const len = binaryString.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+
+        const mimeType = audioMimeType || 'audio/webm';
+        const audioBlob = new Blob([bytes], { type: mimeType });
+
+        let extension = 'webm';
+        const lowerMime = mimeType.toLowerCase();
+        if (lowerMime.includes('mp4') || lowerMime.includes('m4a')) {
+          extension = 'm4a';
+        } else if (lowerMime.includes('ogg')) {
+          extension = 'ogg';
+        } else if (lowerMime.includes('wav')) {
+          extension = 'wav';
+        } else if (lowerMime.includes('mp3')) {
+          extension = 'mp3';
+        }
+
+        const formData = new FormData();
+        formData.append('file', audioBlob, `audio.${extension}`);
+        formData.append('model', 'whisper-large-v3-turbo');
+        formData.append('response_format', 'json');
+
+        const whisperRes = await fetch(
+          'https://api.groq.com/openai/v1/audio/transcriptions',
+          {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${GROQ_API_KEY}`,
+            },
+            body: formData,
+          }
+        );
+
+        if (!whisperRes.ok) {
+          const whisperErr = await whisperRes.text();
+          return new Response(
+            JSON.stringify({ error: `Groq Whisper Error: ${whisperErr}` }),
+            {
+              status: 502,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            }
+          );
+        }
+
+        const whisperData = await whisperRes.json();
+        spokenSentence = (whisperData?.text || '').trim();
+      } catch (err: any) {
+        return new Response(
+          JSON.stringify({ error: `Audio processing error: ${err.message}` }),
+          {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        );
+      }
+    }
+
+    if (!spokenSentence) {
+      return new Response(
+        JSON.stringify({
+          error:
+            'No voice speech was detected. Please tap and speak clearly.',
+        }),
+        {
+          status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         }
       );
@@ -78,11 +152,11 @@ Output MUST be a single valid JSON object strictly matching this schema:
   "comments": string
 }`;
 
-    // Target the allowed models
     const modelsToTry = [
-      'llama-3.1-8b-instant',
-      'llama-3.3-70b-versatile',
       'openai/gpt-oss-120b',
+      'openai/gpt-oss-20b',
+      'llama-3.3-70b-versatile',
+      'llama-3.1-8b-instant',
     ];
 
     let groqData: any = null;
@@ -102,7 +176,7 @@ Output MUST be a single valid JSON object strictly matching this schema:
               model,
               messages: [
                 { role: 'system', content: systemPrompt },
-                { role: 'user', content: voiceText.trim() },
+                { role: 'user', content: spokenSentence },
               ],
               response_format: { type: 'json_object' },
               temperature: 0.1,

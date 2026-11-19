@@ -1543,12 +1543,11 @@
     --max-width: 380px;
 
     &::part(content) {
-      margin-top: max(var(--app-safe-area-top, 0px) + 24px, 56px);
-      margin-bottom: auto;
+      margin: auto;
     }
 
     .voice-modal-card {
-      padding: 20px 16px;
+      padding: 22px 18px;
     }
   }
 }
